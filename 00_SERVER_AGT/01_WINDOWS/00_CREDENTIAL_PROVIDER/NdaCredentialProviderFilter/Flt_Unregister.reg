@@ -1,0 +1,5 @@
+Windows Registry Editor Version 5.00
+
+[-HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Provider Filters\{BFB2C8B7-7149-4C8E-96D2-76433667AF83}]
+
+[-HKEY_CLASSES_ROOT\CLSID\{BFB2C8B7-7149-4C8E-96D2-76433667AF83}]

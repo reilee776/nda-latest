@@ -1,0 +1,89 @@
+﻿1>------ 모두 다시 빌드 시작: 프로젝트: NdaCredentialProvider, 구성: Release x64 ------
+2>------ 모두 다시 빌드 시작: 프로젝트: NdaCredentialProviderFilter, 구성: Release x64 ------
+2>pch.cpp
+1>CNdaCredential.cpp
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(86): error C2143: 구문 오류: ';'이(가) '*' 앞에 없습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(86): error C4430: 형식 지정자가 없습니다. int로 가정합니다. 참고: C++에서는 기본 int를 지원하지 않습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(86): error C2238: ';' 앞에 예기치 않은 토큰이 있습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndacredential.cpp(534): warning C4065: switch문에 'default'가 있으나 'case' 레이블이 없습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndacredential.cpp(584): warning C4805: '==': 연산에 'BOOL' 형식과 'bool' 형식을 함께 사용하는 것은 안전하지 않습니다.
+1>CNdaProvider.cpp
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(86): error C2143: 구문 오류: ';'이(가) '*' 앞에 없습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(86): error C4430: 형식 지정자가 없습니다. int로 가정합니다. 참고: C++에서는 기본 int를 지원하지 않습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(86): error C2238: ';' 앞에 예기치 않은 토큰이 있습니다.
+2>CNdaCredentialProviderFilter.cpp
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): error C2011: 'CNdaProvider': 'class' 형식 재정의
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(19): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(19): error C4430: 형식 지정자가 없습니다. int로 가정합니다. 참고: C++에서는 기본 int를 지원하지 않습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(25): error C2550: '{ctor}': 생성자 이니셜라이저 목록은 생성자 정의에만 사용할 수 있습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(27): warning C4508: '{ctor}': 함수는 값을 반환해야 하므로 'void' 반환 형식으로 간주됩니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(29): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(30): error C4430: 형식 지정자가 없습니다. int로 가정합니다. 참고: C++에서는 기본 int를 지원하지 않습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(31): error C2065: '_pCredential': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(33): error C2065: '_pCredential': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(34): error C2065: '_pCredential': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(45): warning C4508: '{dtor}': 함수는 값을 반환해야 하므로 'void' 반환 형식으로 간주됩니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(49): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(65): error C2065: '_cpus': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(66): error C2065: '_fRecreateEnumeratedCredentials': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(101): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(109): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(117): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(128): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(136): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(167): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(177): error C2065: '_fRecreateEnumeratedCredentials': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(180): error C2065: '_fRecreateEnumeratedCredentials': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(181): error C3861: '_ReleaseEnumeratedCredentials': 식별자를 찾을 수 없습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(182): error C3861: '_CreateEnumeratedCredentials': 식별자를 찾을 수 없습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(196): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(207): error C2065: '_pCredential': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(231): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(234): error C2065: '_cpus': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(235): error C2050: switch 식이 정수 계열이 아닙니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(238): error C3861: '_EnumerateCredentials': 식별자를 찾을 수 없습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(261): error C3861: '_EnumerateCredentials': 식별자를 찾을 수 없습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(270): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(272): error C2065: '_pCredential': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(274): error C2065: '_pCredential': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(275): error C2065: '_pCredential': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(279): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(291): error C2065: '_cpus': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(293): error C2065: '_cpus': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(297): error C2065: '_nowNumAuth': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(298): error C2065: '_cpus': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(299): error C2065: '_nowNumAuth': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(300): error C2065: '_cpus': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(308): error C2065: '_pCredential': 선언되지 않은 식별자입니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(361): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(364): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.cpp(365): error C2027: 정의되지 않은 형식 'CNdaProvider'을(를) 사용했습니다.
+1>d:\02_samples\02_preprocessing\credentialprovider\cpp\cndaprovider.h(20): note: 'CNdaProvider' 선언을 참조하십시오.
+1>Dll.cpp
+2>dllmain.cpp
+1>guid.cpp
+2>guid.cpp
+1>helpers.cpp
+2>   D:\02_SAMPLES\02_PREPROCESSING\CredentialProvider\cpp\x64\Release\NdaCredentialProviderFilter.lib 라이브러리 및 D:\02_SAMPLES\02_PREPROCESSING\CredentialProvider\cpp\x64\Release\NdaCredentialProviderFilter.exp 개체를 생성하고 있습니다.
+2>코드를 생성하고 있습니다.
+2>All 28 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+2>코드를 생성했습니다.
+2>NdaCredentialProviderFilter.vcxproj -> D:\02_SAMPLES\02_PREPROCESSING\CredentialProvider\cpp\x64\Release\NdaCredentialProviderFilter.dll
+1>"NdaCredentialProvider.vcxproj" 프로젝트를 빌드했습니다. - 실패
+========== 모두 다시 빌드: 성공 1, 실패 1, 생략 0 ==========

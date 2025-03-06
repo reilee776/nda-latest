@@ -1,0 +1,12 @@
+Windows Registry Editor Version 5.00
+
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Authentication\Credential Providers\{C5C1510C-FA77-4F81-AB37-B6AF4FC76DAC}]
+@="NdaCredentialProvider"
+
+[HKEY_CLASSES_ROOT\CLSID\{C5C1510C-FA77-4F81-AB37-B6AF4FC76DAC}]
+@="NdaCredentialProvider"
+
+[HKEY_CLASSES_ROOT\CLSID\{C5C1510C-FA77-4F81-AB37-B6AF4FC76DAC}\InprocServer32]
+@="NdaCredentialProvider.dll"
+"ThreadingModel"="Apartment"
+
