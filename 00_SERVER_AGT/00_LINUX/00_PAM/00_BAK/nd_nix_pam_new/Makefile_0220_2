@@ -1,0 +1,56 @@
+CC = gcc
+
+# OpenSSL Static Build Path
+OPENSSL_DIR = /src/libs/1.0.2k/openssl-static-1.0.2k
+
+# JSON-C Static Build Path
+JSONC_DIR = /src/libs/json-c/json-c-0.11-static
+
+# Compiler Flags
+CFLAGS = -g -fPIC -I$(OPENSSL_DIR)/include -I$(JSONC_DIR)/include/json-c -Wall -Wextra -std=c99
+
+# Linker Flags
+LDFLAGS = -shared
+
+# OpenSSL Static Libraries (Forcing Static Linking)
+SSL_LIBS = -Wl,-Bstatic $(OPENSSL_DIR)/lib/libssl.a $(OPENSSL_DIR)/lib/libcrypto.a -Wl,-Bdynamic
+
+# JSON-C Static Library
+JSONC_LIB = -Wl,-Bstatic $(JSONC_DIR)/lib/libjson-c.a -Wl,-Bdynamic
+
+# Other Libraries (Dynamic Linking)
+LIBS = -lcurl -lpam -lcrypt -luuid
+
+# Target Output
+TARGET = nda-pam.so
+
+# Source and Object Files
+PAM_MODULE_SRC = nd_nix_pam.c
+ND_UTILS_C = ./libsrc/nd_utils.c
+ND_UTILS_H = ./libsrc/nd_utils.h
+ND_LOGS_C = ./libsrc/nd_nix_logs.c
+ND_LOGS_H = ./libsrc/nd_nix_logs.h
+ND_RESTAPI_C = ./libsrc/nd_restapi_func.c
+ND_RESTAPI_H = ./libsrc/nd_restapi_func.h
+
+SRCS = $(PAM_MODULE_SRC) $(ND_UTILS_C) $(ND_LOGS_C) $(ND_RESTAPI_C)
+HEADERS = $(ND_UTILS_H) $(ND_LOGS_H) $(ND_RESTAPI_H)
+OBJS = $(SRCS:.c=.o)
+
+# Default Target
+all: $(TARGET)
+
+# Build Shared Object
+$(TARGET): $(OBJS)
+	$(CC) $(LDFLAGS) $(OBJS) -o $@ $(SSL_LIBS) $(JSONC_LIB) $(LIBS)
+
+# Compile Source Files
+%.o: %.c $(HEADERS)
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Clean Up Generated Files
+clean:
+	rm -f $(OBJS) $(TARGET)
+
+.PHONY: all clean
+
