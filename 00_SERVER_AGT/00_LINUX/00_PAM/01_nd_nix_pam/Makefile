@@ -1,5 +1,5 @@
 # 📌 Load build configuration
-include ../scripts/buildinfo.conf
+include ../02_scripts/buildinfo.conf
 
 # Ensure variables are expanded correctly
 PKG_ROOTDIR := $(shell echo $(PKG_ROOTDIR))
