@@ -38,6 +38,7 @@ TARGET = nda-pam.so
 # Custom library path
 CUSTOM_LIB_PATH = /hiagt/lib/nda-pam
 
+
 # Linker flags (use dynamic libraries instead of static)
 LDFLAGS = -g -shared -fPIC \
           -Wl,-rpath,$(LIBS_LIB_JSONC_DIR)/lib64 \
