@@ -1,9 +1,9 @@
-# Load build configuration
+# 📌 Load build configuration
 include ../02_scripts/buildinfo.conf
 
 # Ensure variables are expanded correctly
 PKG_ROOTDIR := $(shell echo $(PKG_ROOTDIR))
-LIBS_ROOTDIR := /src/libs
+LIBS_ROOTDIR := $(shell echo $(PKG_ROOTDIR)/libs)
 
 LIBS_LIB_UUID_DIR := $(shell echo $(LIBS_ROOTDIR)/uuid)
 LIBS_LIB_JSONC_DIR := $(shell echo $(LIBS_ROOTDIR)/json-c)
@@ -11,14 +11,14 @@ LIBS_LIB_OPENSSL_DIR := $(shell echo $(LIBS_ROOTDIR)/openssl)
 LIBS_LIB_CURL_DIR := $(shell echo $(LIBS_ROOTDIR)/curl)
 LIBS_LIB_ZLIB_DIR := $(shell echo $(LIBS_ROOTDIR)/zlib)
 
-# Debugging: Print loaded variables
-$(info PKG_ROOTDIR = $(PKG_ROOTDIR))
-$(info LIBS_ROOTDIR = $(PKG_ROOTDIR)/libs)
-$(info LIBS_LIB_UUID_DIR = $(LIBS_LIB_UUID_DIR))
-$(info LIBS_LIB_JSONC_DIR = $(LIBS_LIB_JSONC_DIR))
-$(info LIBS_LIB_OPENSSL_DIR = $(LIBS_LIB_OPENSSL_DIR))
-$(info LIBS_LIB_CURL_DIR = $(LIBS_LIB_CURL_DIR))
-$(info LIBS_LIB_ZLIB_DIR = $(LIBS_LIB_ZLIB_DIR))
+# 📌 Debugging: Print loaded variables
+$(info 📌 PKG_ROOTDIR = $(PKG_ROOTDIR))
+$(info 📌 LIBS_ROOTDIR = $(PKG_ROOTDIR)/libs)
+$(info 📌 LIBS_LIB_UUID_DIR = $(PKG_ROOTDIR)/uuid)
+$(info 📌 LIBS_LIB_JSONC_DIR = $(PKG_ROOTDIR)/json-c)
+$(info 📌 LIBS_LIB_OPENSSL_DIR = $(PKG_ROOTDIR)/openssl)
+$(info 📌 LIBS_LIB_CURL_DIR = $(PKG_ROOTDIR)/curl)
+$(info 📌 LIBS_LIB_ZLIB_DIR = $(PKG_ROOTDIR)/zlib)
 
 # Compiler
 CC = gcc
@@ -38,18 +38,13 @@ TARGET = nda-pam.so
 # Custom library path
 CUSTOM_LIB_PATH = /hiagt/lib/nda-pam
 
-# Linker flags (use dynamic libraries instead of static)
-LDFLAGS = -g -shared -fPIC \
-          -Wl,-rpath,$(LIBS_LIB_JSONC_DIR)/lib64 \
-          -Wl,-rpath,$(LIBS_LIB_UUID_DIR)/lib \
-          -Wl,-rpath,$(LIBS_LIB_OPENSSL_DIR)/lib \
-          -Wl,-rpath,$(LIBS_LIB_CURL_DIR)/lib \
-          -Wl,-rpath,$(LIBS_LIB_ZLIB_DIR)/lib \
-          -L$(LIBS_LIB_JSONC_DIR)/lib64 -ljson-c \
-          -L$(LIBS_LIB_UUID_DIR)/lib -luuid \
-          -L$(LIBS_LIB_CURL_DIR)/lib -lcurl \
-          -L$(LIBS_LIB_OPENSSL_DIR)/lib -lcrypto -lssl \
-          -L$(LIBS_LIB_ZLIB_DIR)/lib -lz
+# Linker flags
+LDFLAGS = -g -shared -fPIC -Wl,-rpath,$(CUSTOM_LIB_PATH) \
+          $(LIBS_LIB_UUID_DIR)/lib/libuuid.a \
+          -Wl,--whole-archive $(LIBS_LIB_JSONC_DIR)/lib64/libjson-c.a -Wl,--no-whole-archive \
+          -Wl,--whole-archive $(LIBS_LIB_CURL_DIR)/lib/libcurl.a -Wl,--no-whole-archive \
+          -Wl,--whole-archive $(LIBS_LIB_OPENSSL_DIR)/lib/libcrypto.a -Wl,--whole-archive $(LIBS_LIB_OPENSSL_DIR)/lib/libssl.a -Wl,--no-whole-archive \
+          $(LIBS_LIB_ZLIB_DIR)/lib/libz.a
 
 # Libraries to link against
 LIBS = -lpam
@@ -84,12 +79,13 @@ clean:
 
 # Debugging: Print variables
 print-vars:
-	@echo "PKG_ROOTDIR = $(PKG_ROOTDIR)"
-	@echo "LIBS_ROOTDIR = $(PKG_ROOTDIR)/libs"
-	@echo "LIBS_LIB_UUID_DIR = $(LIBS_LIB_UUID_DIR)"
-	@echo "LIBS_LIB_JSONC_DIR = $(LIBS_LIB_JSONC_DIR)"
-	@echo "LIBS_LIB_OPENSSL_DIR = $(LIBS_LIB_OPENSSL_DIR)"
-	@echo "LIBS_LIB_CURL_DIR = $(LIBS_LIB_CURL_DIR)"
-	@echo "LIBS_LIB_ZLIB_DIR = $(LIBS_LIB_ZLIB_DIR)"
+	@echo "📌 PKG_ROOTDIR = $(PKG_ROOTDIR)"
+	@echo "📌 LIBS_ROOTDIR = $(PKG_ROOTDIR)/libs"
+	@echo "📌 LIBS_LIB_UUID_DIR = $(LIBS_LIB_UUID_DIR)"
+	@echo "📌 LIBS_LIB_JSONC_DIR = $(LIBS_LIB_JSONC_DIR)"
+	@echo "📌 LIBS_LIB_OPENSSL_DIR = $(LIBS_LIB_OPENSSL_DIR)"
+	@echo "📌 LIBS_LIB_CURL_DIR = $(LIBS_LIB_CURL_DIR)"
+	@echo "📌 LIBS_LIB_ZLIB_DIR = $(LIBS_LIB_ZLIB_DIR)"
 
 .PHONY: all clean print-vars
+
