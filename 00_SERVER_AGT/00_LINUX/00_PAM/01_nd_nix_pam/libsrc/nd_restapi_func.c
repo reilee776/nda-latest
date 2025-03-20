@@ -8,7 +8,6 @@
 #include <openssl/evp.h>
 #include <openssl/bio.h>
 #include <openssl/buffer.h>
-// #include <openssl/core_names.h>
 #include <curl/curl.h>
 #include <stdbool.h>
 #include <locale.h>
@@ -21,9 +20,26 @@
 // 기존 strdup 호출을 my_strdup으로 재정의
 #define strdup(s) nd_strdup(s)
 
-/*
-        //
-*/
+/**
+ * @brief Generates a random key request URL based on the given IP address, port, and protocol type.
+ *
+ * @param ip        The IP address of the target server.
+ * @param port      The port number to be used in the URL.
+ * @param rdmURL    The buffer to store the generated URL.
+ * @param rdmURLSize The size of the buffer `rdmURL`.
+ * @param httpsUse  Determines whether to use HTTPS (1) or HTTP (0).
+ *
+ * @details
+ * This function constructs a URL string using the provided `ip` and `port`.
+ * If `httpsUse` is set to 1, it generates an HTTPS URL.
+ * If `httpsUse` is set to 0, it generates an HTTP URL.
+ * The resulting URL is stored in `rdmURL`, ensuring it does not exceed the buffer size.
+ *
+ * @note
+ * The function forces `httpsUse` to 1, meaning HTTP will never be used.
+ * The `rdmURL` buffer should be sufficiently large to accommodate the generated URL.
+ * The function ensures null termination of the output string.
+ */
 void MakeRdmURL(const char *ip, int port, char *rdmURL, size_t rdmURLSize, int httpsUse)
 {
 
@@ -48,9 +64,25 @@ void MakeRdmURL(const char *ip, int port, char *rdmURL, size_t rdmURLSize, int h
         nd_log(NDLOG_DBG, "Generating Random Key Request URL: %s", rdmURL);
 }
 
-/*
-        //
-*/
+/**
+ * @brief Generates a login request URL based on the given IP address, port, and protocol type.
+ *
+ * @param ip          The IP address of the target server.
+ * @param port        The port number to be used in the URL.
+ * @param loginURL    The buffer to store the generated login URL.
+ * @param loginURLSize The size of the buffer `loginURL`.
+ * @param httpsUse    Determines whether to use HTTPS (1) or HTTP (0).
+ *
+ * @details
+ * This function constructs a login request URL using the provided `ip` and `port`.
+ * If `httpsUse` is set to 1, it generates an HTTPS URL.
+ * If `httpsUse` is set to 0, it generates an HTTP URL.
+ * The resulting URL is stored in `loginURL`, ensuring it does not exceed the buffer size.
+ *
+ * @note
+ * The `loginURL` buffer should be sufficiently large to accommodate the generated URL.
+ * The function ensures null termination of the output string.
+ */
 void MakeLoginURL(const char *ip, int port, char *loginURL, size_t loginURLSize, int httpsUse)
 {
 
@@ -75,6 +107,25 @@ void MakeLoginURL(const char *ip, int port, char *loginURL, size_t loginURLSize,
         nd_log(NDLOG_DBG, "Generating HIWARE login Request URL: %s", loginURL);
 }
 
+/**
+ * @brief Generates a user login request URL based on the given IP address, port, and protocol type.
+ *
+ * @param ip          The IP address of the target server.
+ * @param port        The port number to be used in the URL.
+ * @param loginURL    The buffer to store the generated user login URL.
+ * @param loginURLSize The size of the buffer `loginURL`.
+ * @param httpsUse    Determines whether to use HTTPS (1) or HTTP (0).
+ *
+ * @details
+ * This function constructs a user login request URL using the provided `ip` and `port`.
+ * If `httpsUse` is set to 1, it generates an HTTPS URL.
+ * If `httpsUse` is set to 0, it generates an HTTP URL.
+ * The resulting URL is stored in `loginURL`, ensuring it does not exceed the buffer size.
+ *
+ * @note
+ * - The `loginURL` buffer should be sufficiently large to accommodate the generated URL.
+ * - The function ensures null termination of the output string.
+ */
 void MakeUserLoginURL(const char *ip, int port, char *loginURL, size_t loginURLSize, int httpsUse)
 {
 
@@ -97,6 +148,25 @@ void MakeUserLoginURL(const char *ip, int port, char *loginURL, size_t loginURLS
         nd_log(NDLOG_DBG, "Generating HIWARE User login Request URL: %s", loginURL);
 }
 
+/**
+ * @brief Generates a two-factor authentication (OTP) login request URL.
+ *
+ * @param ip          The IP address of the target server.
+ * @param port        The port number to be used in the URL.
+ * @param loginURL    The buffer to store the generated two-factor authentication (OTP) login URL.
+ * @param loginURLSize The size of the buffer `loginURL`.
+ * @param httpsUse    Determines whether to use HTTPS (1) or HTTP (0).
+ *
+ * @details
+ * This function constructs a two-factor authentication (OTP) login request URL using the provided `ip` and `port`.
+ * If `httpsUse` is set to 1, it generates an HTTPS URL.
+ * If `httpsUse` is set to 0, it generates an HTTP URL.
+ * The resulting URL is stored in `loginURL`, ensuring it does not exceed the buffer size.
+ *
+ * @note
+ * - The `loginURL` buffer should be sufficiently large to accommodate the generated URL.
+ * - The function ensures null termination of the output string.
+ */
 void MakeTwofactOtpLoginURL(const char *ip, int port, char *loginURL, size_t loginURLSize, int httpsUse)
 {
 
@@ -119,9 +189,23 @@ void MakeTwofactOtpLoginURL(const char *ip, int port, char *loginURL, size_t log
         nd_log(NDLOG_DBG, "Generating HIWARE Twofact login Request URL: %s", loginURL);
 }
 
-/*
-        //"https://192.168.15.205:11200/hiware/api/v1/auth/randomKey";
-*/
+/**
+ * @brief Retrieves the stored random key request URL.
+ *
+ * @return A pointer to the generated random key request URL string.
+ *         Returns NULL if the URL generation fails.
+ *
+ * @details
+ * This function retrieves the authentication server IP and port from the configuration file
+ * and constructs a random key request URL using `MakeRdmURL`.
+ * The resulting URL is stored in `g_sDataRandomUrl`.
+ *
+ * @note
+ * - If the URL is empty after generation, the function returns NULL.
+ * - The function assumes `g_sDataRandomUrl` is a globally declared buffer.
+ * - The HTTPS setting is hardcoded to `1`, meaning the URL will always use HTTPS.
+ *   //"https://192.168.15.205:11200/hiware/api/v1/auth/randomKey";
+ */
 const char *GetRdmURL()
 {
 
@@ -139,9 +223,24 @@ const char *GetRdmURL()
         return g_sDataRandomUrl;
 }
 
-/*
-        //https://127.0.0.1:11200/hiware/api/v1/auth/pam/login
-*/
+/**
+ * @brief Retrieves the stored user login request URL.
+ *
+ * @return A pointer to the generated user login request URL string.
+ *         Returns NULL if the URL generation fails.
+ *
+ * @details
+ * This function checks if `g_sDataUserLoginUrl` is already set.
+ * If not, it retrieves the authentication server's IP and port from the configuration file
+ * and constructs a user login request URL using `MakeUserLoginURL`.
+ *
+ * @note
+ * - If `g_sDataUserLoginUrl` is empty after generation, the function returns NULL.
+ * - The function assumes `g_sDataUserLoginUrl` is a globally declared buffer.
+ * - The HTTPS usage flag is currently hardcoded to `CONF_VALUE_YES`, meaning HTTPS will always be used.
+ *
+ *   //https://127.0.0.1:11200/hiware/api/v1/auth/pam/login
+ */
 const char *GetUserLoginURL()
 {
 
@@ -163,18 +262,35 @@ const char *GetUserLoginURL()
         return g_sDataUserLoginUrl;
 }
 
-/*
-        //https://127.0.0.1:11200/hiware/api/v1/auth/pam/login
-*/
+/**
+ * @brief Retrieves the stored two-factor authentication (OTP) login request URL.
+ *
+ * @return A pointer to the generated two-factor authentication login request URL string.
+ *         Returns NULL if the URL generation fails.
+ *
+ * @details
+ * This function checks if `g_sDataTwoFactLoginIrl` is already set.
+ * If not, it retrieves the authentication server's IP and port from the configuration file
+ * and constructs a two-factor authentication (OTP) login request URL using `MakeTwofactOtpLoginURL`.
+ *
+ * @note
+ * - If `g_sDataTwoFactLoginIrl` is empty after generation, the function returns NULL.
+ * - The function assumes `g_sDataTwoFactLoginIrl` is a globally declared buffer.
+ * - The HTTPS usage flag is currently hardcoded to `CONF_VALUE_YES`, meaning HTTPS will always be used.
+ *
+ *   //https://127.0.0.1:11200/hiware/api/v1/auth/pam/login
+ */
 const char *GetTwoFact_OtpURL()
 {
 
         if (strlen(g_sDataTwoFactLoginIrl) <= 0)
         {
+		// Retrieve authentication server IP and port from the configuration file
                 char *auth_server_ip = get_value_from_inf(g_sConfFilePath, "SERVER_INFO", "AUTH_SERVER_IP");
                 char *auth_server_port = get_value_from_inf(g_sConfFilePath, "SERVER_INFO", "AUTH_SERVER_PORT");
                 char *auth_server_usessl = CONF_VALUE_YES;
 
+		// Generate the two-factor authentication login request URL
                 MakeTwofactOtpLoginURL((const char *)auth_server_ip, atoi(auth_server_port), g_sDataTwoFactLoginIrl, sizeof(g_sDataTwoFactLoginIrl), (strcmp(auth_server_usessl, CONF_VALUE_YES) ? 0 : 1));
         }
 
@@ -187,9 +303,21 @@ const char *GetTwoFact_OtpURL()
         return g_sDataTwoFactLoginIrl;
 }
 
-/*
-        //
-*/
+/**
+ * @brief Sets the issue key in the given Worker structure.
+ *
+ * @param worker Pointer to the Worker structure where the issue key will be stored.
+ * @param key    The issue key to be set.
+ *
+ * @details
+ * This function allocates memory and copies the provided `key` string into the `issueKey` field
+ * of the given `Worker` structure using `strdup()`.
+ *
+ * @note
+ * - The caller is responsible for freeing `worker->issueKey` before calling this function again
+ *   to avoid memory leaks.
+ * - `worker` should not be NULL.
+ */
 void setIssueKey_to_struct(Worker *worker, const char *key)
 {
 
@@ -532,25 +660,32 @@ int getRandomKey_Request(Worker *worker)
 {
         ApiHttpRes httpRes;
 
-	nd_log(NDLOG_TRC, "SendGetDataWithDefaults ...");
         SendGetDataWithDefaults(&httpRes, GetRdmURL());
 
         if (httpRes.m_data == NULL)
         {
                 /**/
-                nd_log(NDLOG_ERR, "[HIW-AGT-PAM-NERR-000002] No response value for Random key request.");
+                nd_log(NDLOG_ERR, "[HIW-AGT-PAM-NERR-000002] Random key request failed: No response data received.");
 
                 return -1;
         }
 
-        nd_log(NDLOG_TRC, "Response value for Random Key request: %s", httpRes.m_data);
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
+        nd_log(NDLOG_TRC, "Response value for Random Key request:");
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
+        nd_log(NDLOG_TRC, "%s", httpRes.m_data);
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
 
         int result = parse_JsonResponse_from_ramdom_request(httpRes.m_data, worker);
         if (result == RET_SUCCESS)
         {
                 /**/
+                nd_log(NDLOG_TRC, LOG_SEPARATOR);
+                nd_log(NDLOG_TRC, "Random key response parsed successfully.");
+                nd_log(NDLOG_TRC, LOG_SEPARATOR);
                 nd_log(NDLOG_TRC, "# Issue Key: %s", worker->issueKey);
                 nd_log(NDLOG_TRC, "# Random Key: %s", worker->randomKey);
+                nd_log(NDLOG_TRC, LOG_SEPARATOR);
 
                 setIssueKey(worker->issueKey);
                 setRandomKey(worker->randomKey);
@@ -558,7 +693,7 @@ int getRandomKey_Request(Worker *worker)
         else
         {
                 /**/
-                nd_log(NDLOG_ERR, "parse_JsonResponse_from_ramdom_request failed.., Error occurred while parsing JSON.");
+                nd_log(NDLOG_ERR, "[HIW-AGT-PAM-NERR-000002] Random key request parsing failed.");
                 return -1;
         }
 
@@ -578,58 +713,43 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
         pRes->m_data = NULL; // initialize
         pRes->size = 0;
 
-	nd_log (NDLOG_ERR, "SendGetData ...CALL");
-
         curl = curl_easy_init();
-	if (!curl)
-	{
-		 nd_log (NDLOG_ERR,"cURL initialization failed!");
-	}	
+        if (!curl)
+        {
+             nd_log (NDLOG_ERR,"[CURL-INIT-FAILURE] cURL initialization failed. Unable to proceed with the HTTP request.");
+        }	
 
-	nd_log (NDLOG_ERR, "SendGetData ...01");
         if (curl)
         {
-		nd_log (NDLOG_ERR, "SendGetData ...02");
-
                 if (iHttpsUse == 1)
                 {
 
-			 nd_log (NDLOG_ERR, "SendGetData ...02-1");
                         slist = curl_slist_append(slist, STRING_CURL_HEADER_USER_AGENT); /* "User-Agent: hi-dev-checker" */
 
-			 nd_log (NDLOG_ERR, "SendGetData ...02-2");
                         if (authKey && strlen(authKey) > 0)
                         {
-				 nd_log (NDLOG_ERR, "SendGetData ...02-3");
                                 char strAuth[256];
                                 snprintf(strAuth, sizeof(strAuth), STRING_CURL_HEADER_API_TOKEN, authKey); /* "API-Token: %s" */
                                 slist = curl_slist_append(slist, strAuth);
-				 nd_log (NDLOG_ERR, "SendGetData ...02-4");
                         }
 
-			nd_log (NDLOG_ERR, "SendGetData ...02-5");
                         if (sSignature && strlen(sSignature) > 0)
                         {
-				nd_log (NDLOG_ERR, "SendGetData ...02-6");
                                 char sTemp[256];
                                 snprintf(sTemp, sizeof(sTemp), STRING_CURL_HEADER_SIGNATURE, sSignature); /*"Signature: %s"*/
                                 slist = curl_slist_append(slist, sTemp);
                         }
 
-			nd_log (NDLOG_ERR, "SendGetData ...02-7");
                         if (sSessID && strlen(sSessID) > 0)
                         {
-				nd_log (NDLOG_ERR, "SendGetData ...02-8");
                                 char sTemp[256];
                                 snprintf(sTemp, sizeof(sTemp), STRING_CURL_HEADER_HANDSHAKE_SID, sSessID); /*"Handshake-Session-Id: %s"*/
                                 slist = curl_slist_append(slist, sTemp);
                         }
 
-			nd_log (NDLOG_ERR, "SendGetData ...02-9");
                         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
                         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
                         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
-			nd_log (NDLOG_ERR, "SendGetData ...02-10");
                 }
                 else
                 {
@@ -664,7 +784,6 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
                         curl_easy_setopt(curl, CURLOPT_HEADER, 0);
                 }
 
-		nd_log (NDLOG_ERR, "SendGetData ...02-11");
                 curl_easy_setopt(curl, CURLOPT_URL, url);
                 curl_easy_setopt(curl, CURLOPT_WRITEDATA, pRes);
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback_write_memory);
@@ -673,16 +792,11 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
 		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
-		nd_log (NDLOG_ERR, "SendGetData ...02-12..");
-		if (curl)
-			nd_log (NDLOG_ERR, "SendGetData ...02-12-00..curl not null");
-
                 res = curl_easy_perform(curl);
-		nd_log (NDLOG_ERR, "SendGetData ...02-12-0");
                 if (res != CURLE_OK)
                 {
                         /**/
-                        nd_log(NDLOG_ERR, "CURL request failed: %s (Error code: %d)", curl_easy_strerror(res), res);
+                        nd_log(NDLOG_ERR, "[CURL-ERROR] Request failed: %s (Error code: %d)", curl_easy_strerror(res), res);
 
                         bResult = 0; // 실패
                 }
@@ -693,17 +807,14 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
                         {
 
                                 /**/
-                                nd_log(NDLOG_ERR, "CURL request succeeded but no response message found.");
+                                nd_log(NDLOG_ERR, "[CURL-EMPTY-RESPONSE] Request succeeded, but the response was empty.");
 
                                 bResult = 0; // failed
                         }
                 }
 
-		nd_log (NDLOG_ERR, "SendGetData ...02-13");
-
                 curl_slist_free_all(slist);
                 curl_easy_cleanup(curl);
-		nd_log (NDLOG_ERR, "SendGetData ...02-14");
         }
         else
         {
@@ -719,18 +830,13 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
 */
 bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, const char *sSignature, const char *sSessID, const char *authKey, int iHttpsUse)
 {
-	nd_log (NDLOG_ERR, "SendPostData ...000");
         bool bResult = true;
         CURL *curl;
         CURLcode res;
 
-	nd_log (NDLOG_ERR, "SendPostData ...");
-
         curl_global_init(CURL_GLOBAL_DEFAULT);
 
-	nd_log (NDLOG_ERR, "SendPostData ...01");
         curl = curl_easy_init();
-	nd_log (NDLOG_ERR, "SendPostData ...02");
         if (curl)
         {
                 struct curl_slist *slist = NULL;
@@ -738,7 +844,6 @@ bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, co
                 // setting HTTP header
                 if (iHttpsUse == 1)
                 {
-			nd_log (NDLOG_ERR, "SendPostData ...03");
                         slist = curl_slist_append(slist, STRING_CURL_HEADER_CONTENT_TYPE); /*"Content-Type: application/json"*/
                         slist = curl_slist_append(slist, STRING_CURL_HEADER_USER_AGENT);   /*"User-Agent: hi-dev-checker"*/
 
@@ -777,7 +882,6 @@ bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, co
                 else
                 {
 
-			nd_log (NDLOG_ERR, "SendPostData ...04");
                         slist = curl_slist_append(slist, "Accept: */*");
                         slist = curl_slist_append(slist, STRING_CURL_HEADER_CONTENT_TYPE); /*"Content-Type: application/json"*/
                         slist = curl_slist_append(slist, "charset: utf-8");
@@ -829,10 +933,6 @@ bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, co
                 res = curl_easy_perform(curl);
                 if (res != CURLE_OK)
                 {
-                        fprintf(stderr, "HTTP PERFORM ERROR: %s\n", curl_easy_strerror(res));
-
-                        //
-                        ///
                         nd_log(NDLOG_ERR, "CURL request failed: %s (Error code: %d)", curl_easy_strerror(res), res);
 
                         bResult = false;
@@ -841,11 +941,8 @@ bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, co
                 {
                         if (pRes->size <= 0)
                         {
-                                fprintf(stderr, "HTTP RETURN Success, But Not Find Response Msg.\n");
                                 bResult = false;
 
-                                //
-                                ///
                                 nd_log(NDLOG_ERR, "CURL request succeeded but no response message found.");
                         }
                 }
@@ -898,8 +995,15 @@ int parse_JsonResponse_from_login_request(const char *res_doc, st_user_login_res
                 return EXCEPTION;
         }
 
-        nd_log(NDLOG_DBG, "Response data for HIWARE login request : %s", res_doc);
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
+        nd_log(NDLOG_DBG, "Response data for HIWARE login request");
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
+        nd_log(NDLOG_DBG, "%s", res_doc);
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
 
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
+        nd_log(NDLOG_DBG, "Extracting resultCode...");
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
         // resultCode 추출
         if (!json_object_object_get_ex(parsed_json, "resultCode", &resultCode))
         {
@@ -1192,6 +1296,8 @@ int parse_JsonResponse_from_login_request(const char *res_doc, st_user_login_res
                 }
         }
 
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
+
         // free memory
         json_object_put(parsed_json);
         return 0;
@@ -1223,7 +1329,11 @@ int parse_JsonResponse_from_twofact_otp_request(const char *res_doc, st_hiauth_t
         }
 
         /**/
-        nd_log(NDLOG_DBG, "Response data for HIWARE twofact login request : %s", res_doc);
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
+        nd_log(NDLOG_DBG, "HIWARE Two-Factor Authentication Response :");
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
+        nd_log(NDLOG_DBG, "%s", res_doc);
+        nd_log(NDLOG_DBG, LOG_SEPARATOR);
 
         parsed_json = json_tokener_parse(res_doc);
         if (parsed_json == NULL)
@@ -1526,8 +1636,6 @@ int requestHiwareAuthToApiServer(const char *username, const char *passwd, const
         response.m_data[0] = '\0';
         response.size = 0;
 
-	nd_log (NDLOG_ERR, "requestHiwareAuthToApiServer...");
-
         if (username == NULL || passwd == NULL ||
             strlen(username) <= 0 || strlen(passwd) <= 0)
         {
@@ -1539,7 +1647,6 @@ int requestHiwareAuthToApiServer(const char *username, const char *passwd, const
                 return -1;
         }
 
-	nd_log (NDLOG_ERR, "requestHiwareAuthToApiServer...getRandomKey_Request CALL");
         retval = getRandomKey_Request(&worker);
         if (retval != 0)
         {
@@ -1554,7 +1661,6 @@ int requestHiwareAuthToApiServer(const char *username, const char *passwd, const
 
         // GetUserLoginURL
 
-	nd_log (NDLOG_ERR, "requestHiwareAuthToApiServer...encPassword CALL");
         char *encPwd = encPassword(passwd, worker.randomKey);
 
         // create JSON object
@@ -1584,8 +1690,13 @@ int requestHiwareAuthToApiServer(const char *username, const char *passwd, const
 
         // convert to JSON string
         const char *sData = json_object_to_json_string(root);
-        // const char* sJsonData = json_object_to_json_string_ext(root, JSON_C_TO_STRING_PRETTY);
-        nd_log(NDLOG_TRC, "sand auth data : [%s]", sData);
+      
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
+        nd_log(NDLOG_TRC, "Sending authentication request to server:", sData);
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
+        nd_log(NDLOG_TRC, "%s", sData);
+
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
         if (sData == NULL)
         {
 
@@ -1710,7 +1821,11 @@ int requestTwoFactAuthToApiserver(const char *type, const char *temporaryAccessK
                 return -1; // except
         }
 
-        nd_log(NDLOG_TRC, "send OTP Request Data : %s", sData);
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
+        nd_log(NDLOG_TRC, "OTP Request Sent:");
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
+        nd_log(NDLOG_TRC, "%s", sData);
+        nd_log(NDLOG_TRC, LOG_SEPARATOR);
 
         retval = SendPostDataWithDefaults(sData, &response, GetTwoFact_OtpURL());
         if (retval && strlen(response.m_data) > 0)

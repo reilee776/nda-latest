@@ -95,6 +95,10 @@
 #define TMP_PATH 					"tmp"
 #define PIPE_NM 					"nd_spam_fifo"
 
+#define LOG_SEPARATOR "--------------------------------------------------------------------"
+
+#define SAFE_SPRINTF(dest, src) snprintf((dest), sizeof(dest), "%s", (src) ? (src) : "")
+
 #define PAM_PIPE_FILE TMP_PATH 	"/" PIPE_NM
 
 #ifdef _RROTOTYPE_DEFINE
@@ -362,6 +366,24 @@ char g_sDataAgentId[2];
 #define CONF_VALUE_JSON "JSON"
 #define CONF_VALUE_TEXT "TEXT"
 
+//# agt_cnf section information
+#define AGT_CNF_SECT_SERVER_INFO "SERVER_INFO"
+#define AGT_CNF_SECT_UPDATE_INFO "UPDATE_INFO"
+#define AGT_CNF_SECT_AGENT_INFO  "AGENT_INFO"
+
+//# agt_cnf valule information
+#define AGT_CNF_VAL_AUTH_SERVER_IP "AUTH_SERVER_IP"
+#define AGT_CNF_VAL_AUTH_SERVER_PORT "AUTH_SERVER_PORT"
+#define AGT_CNF_VAL_AGENT_LOG_LOCAL_PORT "AGENT_LOG_LOCAL_PORT"
+#define AGT_CNF_VAL_AGENT_LOG_LEVEL "AGENT_LOG_LEVEL"
+#define AGT_CNF_VAL_AUTH_EMERGENCY_BYPASS_ON "AUTH_EMERGENCY_BYPASS_ON"
+#define AGT_CNF_VAL_PAM_AUTH_EMERGENCY_RETRY_COUNT "PAM_AUTH_EMERGENCY_RETRY_COUNT"
+#define AGT_CNF_VAL_AGT_SHELL_MODE_ON "AGT_SHELL_MODE_ON"
+#define AGT_CNF_VAL_AGT_PAM_MODE_ON "AGT_PAM_MODE_ON"
+#define AGT_CNF_VAL_PAM_CONSOLE_CONTROL "PAM_CONSOLE_CONTROL"
+#define AGT_CNF_VAL_PAM_LOCAL_IP "PAM_LOCAL_IP"
+#define AGT_CNF_VAL_AGT_PAM_LOGCODE_TRACE "AGT_PAM_LOGCODE_TRACE"
+
 /*
 	// config section value
 */
@@ -379,6 +401,8 @@ char g_sDataAgentId[2];
 #define PAM_CONF_KEY_SERVERUSE 		"SERVER_USE"
 
 #define PAM_CONF_KEY_TRANS_FORMAT 	"TRANS_FORMAT"
+
+#define PAM_CONF_KEY_AGT_PAM_LOGCODE_TRACE "AGT_PAM_LOGCODE_TRACE"
 
 #define PAM_CONF_KEY_SYSTEM_ID 		"SYSTEM_ID"
 #define PAM_CONF_KEY_SYSTEM_PW 		"SYSTEM_PW"

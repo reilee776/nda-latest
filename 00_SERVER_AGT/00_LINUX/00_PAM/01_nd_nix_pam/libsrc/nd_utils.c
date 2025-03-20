@@ -1194,48 +1194,6 @@ void setAgentId(char * id)
 {
 	sprintf (g_sDataAgentId, "%s", id );
 }
-/*
-void parse_json(const char *filename) {
-
-	FILE *file = fopen(filename, "r");
-    	if (!file) {
-        	perror("Unable to open file");
-        	return;
-    	}
-
-    	char buffer[1024];
-    	struct json_object *parsed_json;
-    	struct json_object *ipaddress;
-    	struct json_object *accounts;
-    	struct json_object *agent_id;
-    	struct json_object *privileges_id;
-
-    	while (fgets(buffer, sizeof(buffer), file)) {
-        	// JSON 객체 파싱
-        	parsed_json = json_tokener_parse(buffer);
-        	if (parsed_json == NULL) {
-            	fprintf(stderr, "Error parsing JSON\n");
-            	continue;
-        }
-
-        // JSON 필드 읽기
-        json_object_object_get_ex(parsed_json, "ipaddress", &ipaddress);
-        json_object_object_get_ex(parsed_json, "accounts", &accounts);
-        json_object_object_get_ex(parsed_json, "agent_id", &agent_id);
-        json_object_object_get_ex(parsed_json, "Privileges_id", &privileges_id);
-
-        // 결과 출력
-        for (size_t i = 0; i < json_object_array_length(accounts); i++) {
-            struct json_object *account = json_object_array_get_idx(accounts, i);
-        }
-
-        // JSON 객체 메모리 해제
-        json_object_put(parsed_json);
-    }
-
-    fclose(file);
-}
-*/
 
 void parse_json(const char *filename) {
 
@@ -1442,24 +1400,41 @@ int isSuPamPolicyMatched(const PamPolicy *pamPolicy, const char *ipaddr, const c
 }
 
 void get_local_ip(char *ip_buffer, size_t buffer_size) {
-	struct ifaddrs *ifaddr, *ifa;
-	if (getifaddrs(&ifaddr) == -1) {
-		perror("getifaddrs");
-		return;
+
+	char * local_ip  = get_value_from_inf(g_sConfFilePath, "AGENT_INFO", "PAM_LOCAL_IP");
+	if (local_ip != NULL && strlen (local_ip) > 0 )
+	{
+		strncpy(ip_buffer, local_ip, buffer_size - 1);
+        	ip_buffer[buffer_size - 1] = '\0'; // NULL 종료
+
+            nd_log (NDLOG_INF , LOG_SEPARATOR);           
+        	nd_log (NDLOG_INF ,"[INFO] Using local IP from config: %s", ip_buffer);
+            nd_log (NDLOG_INF , LOG_SEPARATOR);
+
+        	return;
 	}
 
-	for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-		if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET|| strcmp(ifa->ifa_name, "lo") == 0) {
-		    continue; // IPv4 주소만 처리
+	else
+	{
+		struct ifaddrs *ifaddr, *ifa;
+		if (getifaddrs(&ifaddr) == -1) {
+			perror("getifaddrs");
+			return;
 		}
 
-		// 로컬 IP 주소를 가져옴
-		if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), ip_buffer, buffer_size, NULL, 0, NI_NUMERICHOST) == 0) {
-		    break; // 첫 번째 로컬 IP 주소를 찾음
+		for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+			if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET|| strcmp(ifa->ifa_name, "lo") == 0) {
+			    continue; // IPv4 주소만 처리
+			}
+
+			// 로컬 IP 주소를 가져옴
+			if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), ip_buffer, buffer_size, NULL, 0, NI_NUMERICHOST) == 0) {
+			    break; // 첫 번째 로컬 IP 주소를 찾음
+			}
 		}
+
+		freeifaddrs(ifaddr);
 	}
-
-	freeifaddrs(ifaddr);
 }
 
 
@@ -1887,13 +1862,13 @@ bool is_pam_user_ndshell(pam_handle_t *pamh) 	{
 	else
 		snprintf(ndshell_path, sizeof(ndshell_path),"%s/bin/nda-shl", sDataHomeDir);
 
-	nd_log (NDLOG_TRC, "is_pam_user_ndshell :: ndshell_path [%s]/%s", ndshell_path,g_sDataRootDir);
+	nd_log (NDLOG_TRC, "Ndshell path set to: %s (RootDir: %s)", ndshell_path,g_sDataRootDir);
 
 	// Get the username from PAM
 	int retval = pam_get_user(pamh, &username, NULL);
 	if (retval != PAM_SUCCESS || !username) {
 
-		nd_log (NDLOG_TRC, "is_pam_user_ndshell :: get username failed");
+		nd_log (NDLOG_TRC, "Failed to retrieve PAM username. Error code: %d", retval);
 		return false;
 	}
 
@@ -1901,7 +1876,7 @@ bool is_pam_user_ndshell(pam_handle_t *pamh) 	{
 	pwd = getpwnam(username);
 	if (!pwd) {
 
-		nd_log (NDLOG_TRC, "is_pam_user_ndshell :: get pwd failed");
+		nd_log (NDLOG_TRC, "Failed to retrieve user information for username: %s", username);
 		return false;
 	}
 
@@ -1911,12 +1886,12 @@ bool is_pam_user_ndshell(pam_handle_t *pamh) 	{
 	// Check if the shell matches "/hiagt/bin/ndshell"
 	if (user_shell && strcmp(user_shell, ndshell_path) == 0) {
 
-		nd_log (NDLOG_TRC, "is_pam_user_ndshell return true.");
+		nd_log (NDLOG_TRC, "User's shell matches ndshell path. Returning true.");
 
 		return true;
 	}
 
-	nd_log (NDLOG_TRC, "is_pam_user_ndshell return false.");
+	nd_log (NDLOG_TRC, "User's shell does not match ndshell path. Returning false.");
 
 	return false;
 }
@@ -3654,3 +3629,95 @@ char *get_current_user_by_getuid(void) 		{
 
     	return strdup("unknown");
 } 
+
+void ReadAppConfigFile()
+{
+    nd_log(NDLOG_INF, LOG_SEPARATOR);
+    nd_log(NDLOG_INF, "Reading PAM configuration information...");
+    nd_log(NDLOG_INF, LOG_SEPARATOR);
+
+    // AUTH_SERVER_IP
+    const char *authServerIp = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_SERVER_INFO, AGT_CNF_VAL_AUTH_SERVER_IP);
+    if (authServerIp) {
+        nd_log(NDLOG_INF, "Auth Server IP          : %s", authServerIp);
+    } else {
+        nd_log(NDLOG_ERR, "Auth Server IP          : < Information not found or could not be retrieved. >");
+    }
+
+    // AUTH_SERVER_PORT
+    const char *authServerPort = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_SERVER_INFO, AGT_CNF_VAL_AUTH_SERVER_PORT);
+    if (authServerPort) {
+        nd_log(NDLOG_INF, "Auth Server Port        : %s", authServerPort);
+    } else {
+        nd_log(NDLOG_ERR, "Auth Server Port        : < Information not found or could not be retrieved. >");
+    }
+
+    // AGENT_LOG_LOCAL_PORT
+    const char *agentLogLocalPort = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_AGENT_LOG_LOCAL_PORT);
+    if (agentLogLocalPort) {
+        nd_log(NDLOG_INF, "Agent Log Local Port    : %s", agentLogLocalPort);
+    } else {
+        nd_log(NDLOG_ERR, "Agent Log Local Port    : < Information not found or could not be retrieved. >");
+    }
+
+    // AGENT_LOG_LEVEL
+    const char *agentLogLevel = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_AGENT_LOG_LEVEL);
+    if (agentLogLevel) {
+        nd_log(NDLOG_INF, "Agent Log Level         : %s", agentLogLevel);
+    } else {
+        nd_log(NDLOG_ERR, "Agent Log Level         : < Information not found or could not be retrieved. >");
+    }
+
+    const char *authEmergencyBypassOn = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_AUTH_EMERGENCY_BYPASS_ON);
+    if (authEmergencyBypassOn) {
+        nd_log(NDLOG_INF, "Auth Emergency Bypass On: %s", authEmergencyBypassOn);
+    } else {
+        nd_log(NDLOG_ERR, "Auth Emergency Bypass On: < Information not found or could not be retrieved. >");
+    }
+
+    const char *pamAuthEmergencyRetryCount = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_PAM_AUTH_EMERGENCY_RETRY_COUNT);
+    if (pamAuthEmergencyRetryCount) {
+        nd_log(NDLOG_INF, "PAM Auth Emergency Retry Count: %s", pamAuthEmergencyRetryCount);
+    } else {
+        nd_log(NDLOG_ERR, "PAM Auth Emergency Retry Count: < Information not found or could not be retrieved. >");
+    }
+
+    const char *agtShellModeOn = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_AGT_SHELL_MODE_ON);
+    if (agtShellModeOn) {
+        nd_log(NDLOG_INF, "Agent Shell Mode On     : %s", agtShellModeOn);
+    } else {
+        nd_log(NDLOG_ERR, "Agent Shell Mode On     : < Information not found or could not be retrieved. >");
+    }
+
+    const char *agtPamModeOn = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_AGT_PAM_MODE_ON);
+    if (agtPamModeOn) {
+        nd_log(NDLOG_INF, "Agent PAM Mode On       : %s", agtPamModeOn);
+    } else {
+        nd_log(NDLOG_ERR, "Agent PAM Mode On       : < Information not found or could not be retrieved. >");
+    }
+
+    const char *pamConsoleControl = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_PAM_CONSOLE_CONTROL);
+    if (pamConsoleControl) {
+        nd_log(NDLOG_INF, "PAM Console Control     : %s", pamConsoleControl);
+    } else {
+        nd_log(NDLOG_ERR, "PAM Console Control     : < Information not found or could not be retrieved. >");
+    }
+
+    const char *pamLocalIp = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_PAM_LOCAL_IP);
+    if (pamLocalIp) {
+        nd_log(NDLOG_INF, "PAM Local IP            : %s", pamLocalIp);
+    } else {
+        nd_log(NDLOG_ERR, "PAM Local IP            : < Information not found or could not be retrieved. >");
+    }
+
+    const char *agtPamLogcodeTrace = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_AGT_PAM_LOGCODE_TRACE);
+    if (agtPamLogcodeTrace) {
+        nd_log(NDLOG_INF, "Agent PAM Logcode Trace : %s", agtPamLogcodeTrace);
+    } else {
+        nd_log(NDLOG_ERR, "Agent PAM Logcode Trace : < Information not found or could not be retrieved. >");
+    }
+
+    nd_log(NDLOG_INF, LOG_SEPARATOR);
+    nd_log(NDLOG_INF, "PAM configuration read complete.");
+    nd_log(NDLOG_INF, LOG_SEPARATOR);
+}

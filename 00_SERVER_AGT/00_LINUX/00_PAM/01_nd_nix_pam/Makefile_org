@@ -9,7 +9,7 @@ LIBS_LIB_UUID_DIR := $(shell echo $(LIBS_ROOTDIR)/uuid)
 #LIBS_LIB_JSONC_DIR := $(shell echo $(LIBS_ROOTDIR)/json-c)
 #LIBS_LIB_OPENSSL_DIR := $(shell echo $(LIBS_ROOTDIR)/openssl)
 #LIBS_LIB_CURL_DIR := $(shell echo $(LIBS_ROOTDIR)/curl)
-LIBS_LIB_JSONC_DIR :=/usr/local/json-c-0.13.1
+LIBS_LIB_JSONC_DIR :=/usr/local/json-c-0.14
 LIBS_LIB_OPENSSL_DIR :=/usr/local/openssl-1.1.0
 LIBS_LIB_CURL_DIR :=/usr/local/curl-7.61.1
 
@@ -44,26 +44,17 @@ CUSTOM_LIB_PATH = /hiagt/lib/nda-pam
 
 
 # Linker flags (use dynamic libraries instead of static)
-#LDFLAGS = -g -shared -fPIC -static-libgcc \
-#          -Wl,-rpath,'$$ORIGIN:/lib64' \
-#          -Wl,-rpath,/usr/local/openssl-1.1.0/lib \
-#          -Wl,-rpath,/usr/local/curl-7.61.1/lib \
-#          -Wl,-rpath,$(LIBS_LIB_UUID_DIR)/lib \
-#          -Wl,-rpath,$(LIBS_LIB_ZLIB_DIR)/lib \
-#          -L$(LIBS_LIB_UUID_DIR)/lib -luuid \
-#          -L/usr/local/curl-7.61.1/lib -lcurl \
-#          -L/usr/local/openssl-1.1.0/lib -lcrypto -lssl \
-#          -L$(LIBS_LIB_ZLIB_DIR)/lib -lz \
-#	  -L$(LIBS_LIB_JSONC_DIR)/lib -l:libjson-c.a
-
-LDFLAGS = -g -shared -fPIC -static-libgcc \
+LDFLAGS = -g -shared -fPIC \
+          -Wl,-rpath,$(LIBS_LIB_JSONC_DIR)/lib64 \
+          -Wl,-rpath,$(LIBS_LIB_UUID_DIR)/lib \
+          -Wl,-rpath,$(LIBS_LIB_OPENSSL_DIR)/lib \
+          -Wl,-rpath,$(LIBS_LIB_CURL_DIR)/lib \
+          -Wl,-rpath,$(LIBS_LIB_ZLIB_DIR)/lib \
+          -L$(LIBS_LIB_JSONC_DIR)/lib64 -ljson-c \
           -L$(LIBS_LIB_UUID_DIR)/lib -luuid \
-          -L/usr/local/curl-7.61.1/lib -lcurl \
-          -L/usr/local/openssl-1.1.0/lib -lcrypto -lssl \
-          -L$(LIBS_LIB_ZLIB_DIR)/lib -lz \
-	  -L/usr/local/json-c-0.13.1/lib -l:libjson-c.a
-
-STATIC_LIBS = -Wl,-Bstatic /usr/local/json-c-0.13.1/lib/libjson-c.a -Wl,-Bdynamic
+          -L$(LIBS_LIB_CURL_DIR)/lib -lcurl \
+          -L$(LIBS_LIB_OPENSSL_DIR)/lib -lcrypto -lssl \
+          -L$(LIBS_LIB_ZLIB_DIR)/lib -lz
 
 # Libraries to link against
 LIBS = -lpam
@@ -86,7 +77,7 @@ all: $(TARGET)
 
 # Build shared object
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) $(STATIC_LIBS) -o $@
+	$(CC) $(LDFLAGS) $(OBJS) $(LIBS) -o $@
 
 # Compile source files
 %.o: %.c $(HEADERS)

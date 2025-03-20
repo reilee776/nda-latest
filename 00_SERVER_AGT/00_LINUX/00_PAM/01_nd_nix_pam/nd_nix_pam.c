@@ -851,13 +851,13 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 	char *authsvr_emergency_act = get_value_from_inf(g_sConfFilePath, "AGENT_INFO", "AUTH_EMERGENCY_BYPASS_ON");
 
 	/**/
-	nd_log(NDLOG_DBG, "====================================================================");
-	nd_log(NDLOG_DBG, "[reading configuration information]");
-	nd_log(NDLOG_DBG, "# auth_server_ip : [%s]", auth_server_ip);
-	nd_log(NDLOG_DBG, "# auth_server_port : [%s]", auth_server_port);
-	nd_log(NDLOG_DBG, "# authsvr_emergency_act : [%s]", authsvr_emergency_act);
-	nd_log(NDLOG_DBG, "--------------------------------------------------------------------");
-
+    nd_log(NDLOG_DBG, "====================================================================");
+    nd_log(NDLOG_DBG, "[Reading Configuration Information]");
+    nd_log(NDLOG_DBG, "Auth Server IP           : [%s]", auth_server_ip);
+    nd_log(NDLOG_DBG, "Auth Server Port         : [%s]", auth_server_port);
+    nd_log(NDLOG_DBG, "Emergency Action         : [%s]", authsvr_emergency_act);
+    nd_log(NDLOG_DBG, "--------------------------------------------------------------------");
+	
 	/*
 		// convert server port
 	*/
@@ -898,10 +898,18 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 	}
 
 	/**/
-	nd_log(NDLOG_TRC, "Conducting communication checks with the authentication server. | bisAlive_server: %d ", bisAlive_server);
+    nd_log(NDLOG_TRC,
+       "Conducting communication checks with the authentication server."
+       " | bisAlive_server: %d",
+       bisAlive_server);
 
 	/**/
-	nd_log(NDLOG_DBG, "API server connection check result %d | authsvr_emergency_act = %s", bisAlive_server, authsvr_emergency_act);
+    nd_log(NDLOG_DBG,
+       "API server connection check result: %d"
+       " | authsvr_emergency_act = %s",
+       bisAlive_server,
+       authsvr_emergency_act);
+
 
 	/*
 		// Exception Handling Based on Configuration Settings
@@ -921,10 +929,7 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 
 			memset(sDataEnv_var, 0x00, sizeof(sDataEnv_var));
 
-			// nd_log (NDLOG_TRC, "Due to an emergency situation where the server cannot be accessed, logging in will proceed without policy enforcement.");
-
 #ifdef _BAK_NEED_LOG
-			// snprintf(svrConnSessKey, sizeof(svrConnSessKey), "%s", uuid_str);
 			snprintf(agtNo, sizeof(agtNo), "%s", agent_id ? agent_id : "");
 			snprintf(agtConnFormTpCode, sizeof(agtConnFormTpCode), "%s", (user_info->type == 1) ? PAM_CONN_CONSOLE : PAM_CONN_BYPASS);
 			snprintf(userIp, sizeof(userIp), "%s", user_info->remote_host);
@@ -940,17 +945,38 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 			goto nd_pam_authenticate_user;
 #endif
 			/**/
-			nd_log(NDLOG_DBG, "Uncontrolled processing due to communication failure with the authentication server. | Server IP: %s | Server Port: %d | Emergency Mode: %s ", auth_server_ip, authsvr_port, authsvr_emergency_act);
+			nd_log(NDLOG_DBG, 
+			       "Uncontrolled processing due to communication failure with the authentication server."
+			       " | Server IP       = %s"
+			       " | Server Port     = %d"
+			       " | Emergency Mode  = %s",
+			       auth_server_ip, 
+			       authsvr_port, 
+			       authsvr_emergency_act);
 
 			/**/
-			nd_log(NDLOG_INF, "[NDA-PAM] Unable to connect to the API server. Info = %s:%d, emergency mode = %s", auth_server_ip, authsvr_port, authsvr_emergency_act);
+			nd_log(NDLOG_INF, 
+			       "[NDA-PAM] Unable to connect to the API server."
+			       " | Server Info      = %s:%d"
+			       " | Emergency Mode   = %s",
+			       auth_server_ip, 
+			       authsvr_port, 
+			       authsvr_emergency_act);
+
 
 			return PAM_SUCCESS;
 		}
 		else if (strcmp(authsvr_emergency_act, SET_MODE_BLOCK) == 0)
 		{
 			/**/
-			nd_log(NDLOG_ERR, "[HIW-AGT-PAM-NERR-000001] Unable to connect to the API server. Info = %s:%d, emergency mode = %s", auth_server_ip, authsvr_port, authsvr_emergency_act);
+			nd_log(NDLOG_ERR, 
+			       "[HIW-AGT-PAM-NERR-000001] Unable to connect to the API server."
+			       " | Server Info      = %s:%d"
+			       " | Emergency Mode   = %s",
+			       auth_server_ip, 
+			       authsvr_port, 
+			       authsvr_emergency_act);
+
 			return PAM_AUTH_ERR;
 		}
 		else
@@ -963,6 +989,7 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 
 	/**/
 	nd_log(NDLOG_DBG, "[nd_pam_authenticate_user]::[Checking connection to the API server.| bisAlive_server = true|]");
+
 	snprintf(logItem.agtNo, sizeof(logItem.agtNo), "%s", agent_id ? agent_id : "");
 	snprintf(logItem.agtConnFormTpCode, sizeof(logItem.agtConnFormTpCode), "%s", (user_info->type == 1) ? PAM_CONN_CONSOLE : PAM_CONN_BYPASS);
 	snprintf(logItem.userIp, sizeof(logItem.userIp), "%s", user_info->remote_host);
@@ -999,10 +1026,22 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 			snprintf(logItem.agtAuthNo, sizeof(logItem.agtAuthNo), "%s", ndshell_agtAuthNo ? ndshell_agtAuthNo : "");
 
 			/**/
-			nd_log(NDLOG_DBG, "Connection is blocked as the sam policy action setting is set to block.[ip addr:%s/account:%s][%d]", user_info->remote_host, user_info->current_user, sam_logging);
-
+			nd_log(NDLOG_DBG, 
+			       "Connection is blocked as the SAM policy action setting is set to block."
+			       " | IP Address  = %s"
+			       " | Account     = %s"
+			       " | Logging     = %d",
+			       user_info->remote_host, 
+			       user_info->current_user, 
+			       sam_logging);
 			/**/
-			nd_log(NDLOG_ERR, "[HIW-AGT-PAM-PMER-000001] Access denied due to SAM-policy | User: %s | Remote Host: %s", user_info->current_user, user_info->remote_host);
+			nd_log(NDLOG_ERR, 
+			       "[HIW-AGT-PAM-PMER-000001] Access denied due to SAM-policy."
+			       " | User         = %s"
+			       " | Remote Host  = %s",
+			       user_info->current_user, 
+			       user_info->remote_host);
+
 
 			pam_logging = sam_logging;
 
@@ -1064,7 +1103,8 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 	{
 
 		/**/
-		nd_log(NDLOG_TRC, "Policy check result: Complies with the policy. | agt_auth_no = %d | pam_action = %d | pam_logging = %d )", agt_auth_no, pam_action, pam_logging);
+		nd_log(NDLOG_TRC, "Policy check result: Complies with the policy. | agt_auth_no = %d | pam_action = %d | pam_logging = %d )", \
+				 agt_auth_no, pam_action, pam_logging);
 
 		if (pam_action == PAM_ACT_RULE_DENY)
 		{
@@ -1075,10 +1115,12 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 			snprintf(logItem.pamAgtAuthNo, sizeof(logItem.pamAgtAuthNo), "%s", agt_auth_no ? agt_auth_no : "");
 
 			/**/
-			nd_log(NDLOG_DBG, "Connection is blocked as the pam policy action setting is set to block.[ip addr:%s/account:%s]", user_info->remote_host, user_info->current_user);
+			nd_log(NDLOG_DBG, "Connection is blocked as the pam policy action setting is set to block.[ip addr:%s/account:%s]", \
+					user_info->remote_host, user_info->current_user);
 
 			/**/
-			nd_log(NDLOG_ERR, "[HIW-AGT-PAM-PMER-000002] Access denied due to PAM-policy | User: %s | Remote Host: %s", user_info->current_user, user_info->remote_host);
+			nd_log(NDLOG_ERR, "[HIW-AGT-PAM-PMER-000002] Access denied due to PAM-policy | User: %s | Remote Host: %s", \
+					user_info->current_user, user_info->remote_host);
 
 			retval = PAM_PERM_DENIED;
 			goto nd_pam_authenticate_user;
@@ -1090,10 +1132,12 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 			bRetPamPolicy = true;
 
 			/**/
-			nd_log(NDLOG_DBG, "Connection is allowed as the pam policy action setting is set to allow.[ip addr:%s/account:%s]", user_info->remote_host, user_info->current_user);
+			nd_log(NDLOG_DBG, "Connection is allowed as the pam policy action setting is set to allow.[ip addr:%s/account:%s]", \
+					user_info->remote_host, user_info->current_user);
 
 			/**/
-			nd_log(NDLOG_INF, "[NDA-PAM] Access granted by PAM-policy | User: %s | Remote Host: %s", user_info->current_user, user_info->remote_host);
+			nd_log(NDLOG_INF, "[NDA-PAM] Access granted by PAM-policy | User: %s | Remote Host: %s", \
+					user_info->current_user, user_info->remote_host);
 
 			retval = PAM_SUCCESS;
 		}
@@ -1127,8 +1171,6 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 
 	if (bRetPamPolicy == false)
 	{
-		// nd_log(NDLOG_TRC, "[nd_pam_authenticate_user]::[get current status : pam_opermode = OFF]");
-
 		memset(sDataEnv_var, 0x00, sizeof(sDataEnv_var));
 		snprintf(sDataEnv_var, sizeof(sDataEnv_var), HIWARE_NOT_CONNECTAPI_FORMAT, "BYPASS");
 		pam_putenv(pamh, sDataEnv_var);
@@ -1173,8 +1215,15 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 
 	if (bHiwareAuthRet == false)
 	{
+		nd_log(NDLOG_DBG, 
+		       "HIWARE authentication has failed."
+		       " | svrConnFailRsnCode  = %s"
+		       " | svrConnRstTpCode    = %s"
+		       " | pamCertDtlAuthCode  = %s",
+		       PAM_SVR_FAIL_HI_AUTH_FAIL, 
+		       PAM_AUTH_FAIL, 
+		       PAM_CERT_DTL_AUTH_HIWAREAUTH);
 
-		nd_log(NDLOG_DBG, "HIWARE authentication has failed. | svrConnFailRsnCode = %s | svrConnRstTpCode = %s | pamCertDtlAuthCode = %s", PAM_SVR_FAIL_HI_AUTH_FAIL, PAM_AUTH_FAIL, PAM_CERT_DTL_AUTH_HIWAREAUTH);
 
 		snprintf(logItem.svrConnFailRsnCode, sizeof(logItem.svrConnFailRsnCode), PAM_SVR_FAIL_HI_AUTH_FAIL);
 		snprintf(logItem.svrConnRstTpCode, sizeof(logItem.svrConnRstTpCode), "%s", PAM_AUTH_FAIL);
@@ -1226,7 +1275,15 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 		nd_log(NDLOG_DBG, "HIWARE authentication request result: failure");
 
 		/**/
-		nd_log(NDLOG_ERR, "[HIW-AGT-PAM-AUTH-000002] Failed to start the authentication process with the API server for HIWARE authentication. [account:%s/ hiware account:%s/ retcode:%d]", user_info->current_user, hiauth_input_data->sHiAuthId, hi_hiwareauth_ret);
+		nd_log(NDLOG_ERR, 
+		       "[HIW-AGT-PAM-AUTH-000002] Failed to start the authentication process with the API server for HIWARE authentication."
+		       " | account         = %s"
+		       " | hiware account  = %s"
+		       " | retcode         = %d",
+		       user_info->current_user, 
+		       hiauth_input_data->sHiAuthId, 
+		       hi_hiwareauth_ret);
+		
 
 		if (hi_hiwareauth_ret.message != NULL)
 			pam_error(pamh, hi_hiwareauth_ret.message);
@@ -1240,7 +1297,15 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 	snprintf(logItem.certStepSeqNo, sizeof(logItem.certStepSeqNo), "%s", hi_hiwareauth_ret.certStepSeqNo);
 
 	/**/
-	nd_log(NDLOG_TRC, "HIWARE authentication request result: success. | certTpCode = %s | certAppTpCode = %s | certStepSeqNo = %s | g_sDataTemporaryAccessKey = %s", logItem.certTpCode, logItem.certAppTpCode, logItem.certStepSeqNo, g_sDataTemporaryAccessKey);
+    nd_log(NDLOG_TRC, LOG_SEPARATOR);
+    nd_log(NDLOG_TRC, "HIWARE authentication request result: success.");
+    nd_log(NDLOG_TRC, LOG_SEPARATOR);
+    nd_log(NDLOG_TRC, " | certTpCode              = %s", logItem.certTpCode);
+    nd_log(NDLOG_TRC, " | certAppTpCode           = %s", logItem.certAppTpCode);
+    nd_log(NDLOG_TRC, " | certStepSeqNo           = %s", logItem.certStepSeqNo);
+    nd_log(NDLOG_TRC, " | g_sDataTemporaryAccessKey = %s", g_sDataTemporaryAccessKey);
+    nd_log(NDLOG_TRC, LOG_SEPARATOR);
+
 
 	if (strlen(g_sDataTemporaryAccessKey) > 0)
 	{
@@ -1255,7 +1320,16 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 		retval = pam_prompt(pamh, PAM_PROMPT_ECHO_OFF, &hiwareTwoFactData, sTwoFactString);
 
 		/**/
-		nd_log(NDLOG_DBG, "OTP value entered by the user is [%s]. | g_sDataTemporaryAccessKey =%s | hiwareTwoFactData = %s | agent_id = %s", hiwareTwoFactData, g_sDataTemporaryAccessKey, hiwareTwoFactData, agent_id);
+		nd_log(NDLOG_DBG, 
+		       "OTP value entered by the user is [%s]."
+		       " | g_sDataTemporaryAccessKey = %s"
+		       " | hiwareTwoFactData         = %s"
+		       " | agent_id                  = %s",
+		       hiwareTwoFactData, 
+		       g_sDataTemporaryAccessKey, 
+		       hiwareTwoFactData, 
+		       agent_id);
+
 
 		/*
 			// Send the OTP information to the API server to perform authentication.
@@ -1269,8 +1343,16 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 			snprintf(logItem.certSucesFailYn, sizeof(logItem.certSucesFailYn), "0");
 
 			/**/
-			nd_log(NDLOG_DBG, "additional authentication process has failed. | logItem.svrConnFailRsnCode = %s | logItem.svrConnRstTpCode = %s | logItem.pamCertDtlAuthCode = %s | logItem.certSucesFailYn = %s",
-				   logItem.svrConnFailRsnCode, logItem.svrConnRstTpCode, logItem.certSucesFailYn);
+			nd_log(NDLOG_DBG, 
+			       "additional authentication process has failed."
+			       " | logItem.svrConnFailRsnCode = %s"
+			       " | logItem.svrConnRstTpCode = %s"
+			       " | logItem.pamCertDtlAuthCode = %s"
+			       " | logItem.certSucesFailYn = %s",
+			       logItem.svrConnFailRsnCode, 
+			       logItem.svrConnRstTpCode, 
+			       logItem.pamCertDtlAuthCode, 
+			       logItem.certSucesFailYn);
 
 			pam_error(pamh, "Additional authentication failed.");
 
@@ -1286,8 +1368,18 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 		snprintf(logItem.certSucesFailYn, sizeof(logItem.certSucesFailYn), "%s", hi_twofact_ret.certSucesFailYn);
 		snprintf(logItem.certStepSeqNo, sizeof(logItem.certStepSeqNo), "%s", hi_twofact_ret.certStepSeqNo);
 
-		nd_log(NDLOG_DBG, "Detailed results of additional authentication. | logItem.svrConnRstTpCode = %s | logItem.certTpCode = %s | logItem.certAppTpCode = %s | logItem.certSucesFailYn = %s | logItem.certStepSeqNo",
-			   logItem.svrConnRstTpCode, logItem.certTpCode, logItem.certAppTpCode, logItem.certSucesFailYn, logItem.certStepSeqNo);
+		nd_log(NDLOG_DBG, 
+		       "Detailed results of additional authentication."
+		       " | logItem.svrConnRstTpCode  = %s"
+		       " | logItem.certTpCode        = %s"
+		       " | logItem.certAppTpCode     = %s"
+		       " | logItem.certSucesFailYn   = %s"
+		       " | logItem.certStepSeqNo     = %s",
+		       logItem.svrConnRstTpCode, 
+		       logItem.certTpCode, 
+		       logItem.certAppTpCode, 
+		       logItem.certSucesFailYn, 
+		       logItem.certStepSeqNo);
 
 		retval = PAM_SUCCESS;
 	}
@@ -1302,8 +1394,14 @@ int nd_pam_authenticate_user(char *uuid_str, SessionInfo *user_info, pam_handle_
 
 			retval = PAM_AUTH_ERR;
 
-			nd_log(NDLOG_DBG, "Detailed results of additional authentication. | logItem.svrConnFailRsnCode = %s | logItem.svrConnRstTpCode = %s | logItem.pamCertDtlAuthCode = %s ",
-				   logItem.svrConnFailRsnCode, logItem.svrConnRstTpCode, logItem.pamCertDtlAuthCode);
+			nd_log(NDLOG_DBG, 
+			       "Detailed results of additional authentication."
+			       " | logItem.svrConnFailRsnCode = %s"
+			       " | logItem.svrConnRstTpCode   = %s"
+			       " | logItem.pamCertDtlAuthCode = %s",
+			       logItem.svrConnFailRsnCode, 
+			       logItem.svrConnRstTpCode, 
+			       logItem.pamCertDtlAuthCode);
 
 			goto nd_pam_authenticate_user;
 		}
@@ -1404,11 +1502,11 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 	(void)argc;
 	(void)argv;
 
-	int retval = 0; //, sock = 0;
+	int retval = 0; 
 	bool isSuSession = false;
 	bool isNdShell = false;
 	struct st_pam_conf pam_conf;
-	char *uuid_str; //= malloc(ND_UUID_LENGTH + 1);
+	char *uuid_str; 
 	char *su_uuid_str;
 	struct _archive_log *logitem = NULL, logItem = {
 											 0,
@@ -1434,11 +1532,9 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 	char sDataCollectLog[MAX_STRING_LENGTH];
 	char sDataEnv_var[MAX_ENV_STR_LEN];
 	char local_ip[INET_ADDRSTRLEN];
-	char pamCertTpCode[4] = {
-		0,
-	};
+	char pamCertTpCode[4] = {0,	};
 
-	nd_log(NDLOG_TRC, "Starting the process of verifying the user's identity.");
+    nd_log(NDLOG_TRC, "Verifying user identity.");
 
 	/*
 				// get pam config
@@ -1456,6 +1552,8 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 	if (g_sConfFilePath == NULL)
 		g_sConfFilePath = strdup(getPamConfFilePath(sDataHomeDir));
 
+    ReadAppConfigFile();
+
 	getpamconf(&pam_conf);
 	char *pam_op_mode = get_value_as_string(getPamRuleFilePath(sDataHomeDir), "pamCertYn");
 
@@ -1472,21 +1570,16 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 	char *agent_id = get_value_as_string(getPamRuleFilePath(sDataHomeDir), "agtNo");
 	g_nDataSshPort = get_ssh_listening_port();
 
-	nd_log(NDLOG_DBG, "Gathering essential data for product functionality.");
-	nd_log(NDLOG_DBG, "# Home Directory: %s", sDataHomeDir);
-	nd_log(NDLOG_DBG, "# Product Config File: %s", g_sConfFilePath);
-	nd_log(NDLOG_DBG, "# Get PAM Operation Mode: %d", pam_opermode);
-	nd_log(NDLOG_DBG, "# Get NdShell Operation Mode: %d", sam_opermode);
+    nd_log(NDLOG_DBG, "Gathering essential data for product functionality:");
+    nd_log(NDLOG_DBG, " - Home Directory           : %s", sDataHomeDir);
+    nd_log(NDLOG_DBG, " - Product Config File      : %s", g_sConfFilePath);
+    nd_log(NDLOG_DBG, " - PAM Operation Mode       : %d", pam_opermode);
+    nd_log(NDLOG_DBG, " - NdShell Operation Mode   : %d", sam_opermode);
 
-	/**/
-	nd_log(NDLOG_DBG, "# get agent id : [%s]", agent_id);
-
-	/**/
-	nd_log(NDLOG_DBG, "# get sshd listening port : [%d]", g_nDataSshPort);
-
-	/**/
-	nd_log(NDLOG_INF, "[NDA-PAM] Authentication process has started.");
-
+    nd_log(NDLOG_DBG, " - Agent ID                 : %s", agent_id);
+    nd_log(NDLOG_DBG, " - SSHD Listening Port      : %d", g_nDataSshPort);
+    nd_log(NDLOG_INF, "[NDA-PAM] Authentication process has started.");
+	
 	if (g_sConfFilePath == NULL)
 		g_sConfFilePath = strdup(getPamConfFilePath(sDataHomeDir));
 
@@ -1500,24 +1593,25 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 	const void *rhost_item = NULL;
 	const char *rhost = NULL;
 
-	if (pam_get_item(pamh, PAM_RHOST, &rhost_item) == PAM_SUCCESS)
-	{
+	if (pam_get_item(pamh, PAM_RHOST, &rhost_item) == PAM_SUCCESS) {
+        rhost = (const char *)rhost_item;
 
-		rhost = (const char *)rhost_item;
-		if (rhost != NULL && rhost[0] != '\0')
-		{
-			nd_log(NDLOG_DBG, "Remote host detected: %s", rhost);
-			nd_log(NDLOG_TRC, "Exception connection validation of the session.");
-			if (validate_json_exceptionConnection(getPamRuleFilePath(sDataHomeDir), rhost) == 1)
-			{
-				nd_log(NDLOG_INF, "exception connection validation result of the connection session is exceptional, no additional authentication will be performed.");
-				return PAM_SUCCESS;
-			}
-		}
-		else
-		{
-			// nd_log(NDLOG_WAN, "Failed to retrieve the IP address of the connection session.");
-		}
+	    // 로그 메시지: 원격 호스트가 유효한 경우 로그 출력
+	    if (rhost && rhost[0] != '\0')      {
+
+            nd_log(NDLOG_DBG, "Remote host detected: %s", rhost);
+
+            // 예외 연결 세션 검증 로그 및 결과 처리
+            nd_log(NDLOG_TRC, "Validating the session against exception connection rules.");
+            if (validate_json_exceptionConnection(getPamRuleFilePath(sDataHomeDir), rhost) == 1) {
+                nd_log(NDLOG_INF, "The session is classified as an exception connection. Skipping additional authentication.");
+                return PAM_SUCCESS;
+            }
+            
+	    } else {
+            // 유효하지 않은 경우 경고 로그 출력
+            nd_log(NDLOG_WAN, "Remote host is not set or invalid. Could not retrieve the IP address.");
+	    }
 	}
 
 	/*
@@ -1525,22 +1619,23 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 	*/
 	uuid_str = generate_uuid();
 
-	/**/
-	nd_log(NDLOG_DBG, "local ip address : [%s]", local_ip);
+	/** Log the detected local IP address **/
+	nd_log(NDLOG_DBG, "Detected local IP address: [%s]", local_ip);
 
-	/**/
-	nd_log(NDLOG_DBG, "generate session key : [%s]", uuid_str);
+	/** Log the generated session key **/
+	nd_log(NDLOG_DBG, "Generated session key: [%s]", uuid_str);
 
-	if (pam_get_user(pamh, &current_user, NULL) == PAM_SUCCESS && current_user != NULL)
-	{
-		// nd_log(NDLOG_WAN, "Failed to retrieve the username of the connection session");
+	//if (pam_get_user(pamh, &current_user, NULL) != PAM_SUCCESS || current_user == NULL) {
+    if (pam_get_user(pamh, &current_user, NULL) == PAM_SUCCESS && current_user != NULL)
+    {
+    		nd_log(NDLOG_WAN, "Failed to retrieve the username of the connection session");
 	}
 
 	/**/
 	nd_log(NDLOG_INF, "[NDA-PAM] User attempting authentication: %s", current_user);
 
 	/*
-				// Getting the user input password.
+		// Getting the user input password.
 	*/
 	retval = pam_get_authtok(pamh, PAM_AUTHTOK, &input_passwd, NULL);
 	if (retval != PAM_SUCCESS)
@@ -1586,24 +1681,13 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 
 	if (login_status != 0) // success 0, failed 1
 	{
-		/**/
-		nd_log(NDLOG_TRC, "Login attempt failed for system account %s.", current_user);
-
-		/**/
-		nd_log(NDLOG_ERR, "[HIW-AGT-PAM-AUTH-000001] Authentication failed for user: %s", current_user);
+        nd_log(NDLOG_ERR, "[HIW-AGT-PAM-AUTH-000001] Login attempt failed for system account: %s.", current_user);
 
 		return PAM_AUTH_ERR;
 	}
 
-	/**/
-	nd_log(NDLOG_TRC, "Login attempt successful for system account. %s", current_user);
+    nd_log(NDLOG_INF, "[NDA-PAM] Authentication successful for user: %s", current_user);
 
-	/**/
-	nd_log(NDLOG_INF, "[NDA-PAM] Authentication successful for user: %s", current_user);
-
-	/*
-		//
-	*/
 	snprintf(logItem.agtNo, sizeof(logItem.agtNo), "%s", agent_id ? agent_id : "");
 
 	snprintf(logItem.securStepNo, sizeof(logItem.securStepNo), "%s", PAM_SECUR_STEP_PAM);
@@ -1628,29 +1712,55 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 		info = get_ssh_session_info(pamh);
 
 		nd_log(NDLOG_DBG, "SSH connection session information collection result.");
-		nd_log(NDLOG_DBG, "# current_user: %s | remote_host: %s | target_user: %s | type: %d", info->current_user, info->remote_host, info->target_user, info->type);
+		
+		nd_log(NDLOG_DBG, 
+		       "# Session Information"
+		       " | Current User  = %s"
+		       " | Remote Host   = %s"
+		       " | Target User   = %s"
+		       " | Type          = %d",
+		       info->current_user, 
+		       info->remote_host, 
+		       info->target_user, 
+		       info->type);
+
 
 		if (validate_json_exceptionConnection(getPamRuleFilePath(sDataHomeDir), info->remote_host) == 1)
 		{
-			nd_log(NDLOG_DBG, "The current session complies with the exception access settings. | Remote Host: %s | Result = 1", info->remote_host);
+			nd_log(NDLOG_DBG, 
+			       "The current session complies with the exception access settings."
+			       " | Remote Host = %s"
+			       " | Result      = 1",
+			       info->remote_host);
+
 			return PAM_SUCCESS;
 		}
 
 		/**/
-		nd_log(NDLOG_INF, "[NDA-PAM] SSH session started | User: %s | Remote Host: %s | Terminal: %s", info->current_user, info->remote_host, tty);
+		nd_log(NDLOG_INF, 
+		       "[NDA-PAM] SSH session started"
+		       " | User         = %s"
+		       " | Remote Host  = %s"
+		       " | Terminal     = %s",
+		       info->current_user, 
+		       info->remote_host, 
+		       tty);
+
 
 		snprintf(logItem.userIp, sizeof(logItem.userIp), "%s", info->remote_host);
 		snprintf(logItem.connAcctId, sizeof(logItem.connAcctId), "%s", info->current_user);
 
-		nd_log(NDLOG_TRC, "====================================================================");
-		nd_log(NDLOG_TRC, "[get ssh session information]");
-		nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
-		nd_log(NDLOG_TRC, "# nsession type : terminal");
-		nd_log(NDLOG_DBG, "# agtConnForm : %s", logItem.agtConnFormTpCode);
-		nd_log(NDLOG_DBG, "# userIp : %s", logItem.userIp);
-		nd_log(NDLOG_DBG, "# connAcctId : %s", logItem.connAcctId);
-		nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
+        nd_log(NDLOG_TRC, "====================================================================");
+        nd_log(NDLOG_TRC, "[Fetching SSH session details]");
+        nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
 
+        nd_log(NDLOG_DBG, "Session Type     : terminal");
+        nd_log(NDLOG_DBG, "Agent Connection : %s", logItem.agtConnFormTpCode);
+        nd_log(NDLOG_DBG, "User IP          : %s", logItem.userIp);
+        nd_log(NDLOG_DBG, "Connection ID    : %s", logItem.connAcctId);
+
+        nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
+            
 		// TEMP CODE
 		sprintf(pam_conf.authsvr_linkage, "%s", CONF_VALUE_YES);
 		if (strcmp(pam_conf.authsvr_linkage, CONF_VALUE_YES) == 0)
@@ -1662,7 +1772,8 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 				///
 				nd_log(NDLOG_ERR, "[HIW-AGT-PAM-AUTH-000003] Failed to perform user authentication.");
 				return retval;
-			}
+			
+}
 		}
 		else
 		{
@@ -1679,11 +1790,7 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 		// test
 		pam_logging = LOGGING_ON;
 
-		/**/
-		nd_log(NDLOG_TRC, "Additional authentication was successful, and the overall login process was completed successfully.");
-
-		/**/
-		nd_log(NDLOG_INF, "[NDA-PAM] Additional authentication was successful, and the overall login process was completed successfully.");
+        nd_log(NDLOG_TRC, "Additional authentication was successful, completing the overall login process.");
 		return retval;
 	}
 	else if (tty && strstr(tty, "pts"))
@@ -1697,7 +1804,13 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 		// nd_log (NDLOG_DBG, "su ")
 
 		/**/
-		nd_log(NDLOG_INF, "[NDA-PAM] su session started | User: %s | Terminal: %s", logItem.connAcctId, tty);
+		nd_log(NDLOG_INF, 
+		       "[NDA-PAM] su session started"
+		       " | User     = %s"
+		       " | Terminal = %s",
+		       logItem.connAcctId, 
+		       tty);
+
 
 		char *real_account = get_current_user_by_getuid();
 		if (real_account != NULL && strcmp(logItem.connAcctId, real_account) != 0)
@@ -1705,12 +1818,13 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 			snprintf(logItem.connAcctId, sizeof(logItem.connAcctId), "%s", real_account);
 		}
 
+		// 현재 사용자 계정 ID 및 보안 단계 설정
 		snprintf(logItem.connAcctId, sizeof(logItem.connAcctId), "%s", info->current_user);
-
 		snprintf(logItem.securStepNo, sizeof(logItem.securStepNo), "%s", PAM_SECUR_STEP_PAM);
 		snprintf(logItem.pamCertDtlCode, sizeof(logItem.pamCertDtlCode), "%s", PAM_SU_LOGIN);
 		sprintf(logItem.pamCertDtlAuthCode, "%s", PAM_CERT_DTL_AUTH_PAM_RULE);
 
+		// 현재 사용자 계정 ID 및 보안 단계 설정
 		const char *sessionkey = pam_getenv(pamh, ENV_HIWARE_SESSIONKEY);
 		if (sessionkey == NULL)
 			sessionkey = getenv(ENV_HIWARE_SESSIONKEY);
@@ -1720,9 +1834,9 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 		snprintf(logItem.svrConnSessKey, sizeof(logItem.svrConnSessKey), "%s", sessionkey ? sessionkey : "");
 
 		memset(uuid_str, 0x00, sizeof(uuid_str));
-
 		snprintf(uuid_str, sizeof(logItem.svrConnSessKey), "%s", sessionkey);
 
+		// 환경 변수에서 Pre-session 키 가져오기
 		const char *presessionkey = pam_getenv(pamh, ENV_HIWARE_SU_SESSIONKEY);
 		if (presessionkey == NULL)
 			presessionkey = getenv(ENV_HIWARE_SU_SESSIONKEY);
@@ -1733,11 +1847,19 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 			snprintf(sDataEnv_var, sizeof(sDataEnv_var), HIWARE_PRE_SU_SESSION_KEY_FORMAT, presessionkey ? presessionkey : "");
 			pam_putenv(pamh, sDataEnv_var);
 
-			nd_log(NDLOG_DBG, "Save the HIWARE pre su session key. | [%s]", sDataEnv_var);
-
 			snprintf(logItem.svrConnPreSuSessKeyNo, sizeof(logItem.svrConnPreSuSessKeyNo), "%s", presessionkey ? presessionkey : "");
 
-			nd_log(NDLOG_DBG, "turn su session key into pre su session key. | su session key: %s", presessionkey);
+			nd_log(NDLOG_DBG, 
+			       "Save the HIWARE pre su session key.\n"
+			       " | Pre su session key: [%s]", 
+			       sDataEnv_var);
+
+
+			nd_log(NDLOG_DBG, 
+			       "Turning su session key into pre su session key.\n"
+			       " | Pre su session key: %s", 
+			       presessionkey);
+
 		}
 
 		// CREATE NEW SU SESSION KEY
@@ -1780,16 +1902,18 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 		}
 
 		nd_log(NDLOG_TRC, "====================================================================");
-		nd_log(NDLOG_TRC, "[get su session information]");
+		nd_log(NDLOG_TRC, "[Fetching SU session details]");
 		nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
-		nd_log(NDLOG_DBG, "# session type : su");
-		nd_log(NDLOG_DBG, "# agtConnFormTpCode : %s", logItem.agtConnFormTpCode);
-		nd_log(NDLOG_DBG, "# user Ip : %s", logItem.userIp);
-		nd_log(NDLOG_DBG, "# connAcctId : %s", logItem.connAcctId);
-		nd_log(NDLOG_DBG, "# switchAcctId : %s", logItem.switchAcctId);
-		nd_log(NDLOG_DBG, "# securStepNo : %s", logItem.securStepNo);
-		nd_log(NDLOG_DBG, "# pamCertDtlCode : %s", logItem.pamCertDtlCode);
-		nd_log(NDLOG_DBG, "# pamCertDtlAuthCode : %s", logItem.pamCertDtlAuthCode);
+
+        nd_log(NDLOG_DBG, "# session type          : su");
+        nd_log(NDLOG_DBG, "# agtConnFormTpCode     : %s", logItem.agtConnFormTpCode);
+        nd_log(NDLOG_DBG, "# user Ip               : %s", logItem.userIp);
+        nd_log(NDLOG_DBG, "# connAcctId            : %s", logItem.connAcctId);
+        nd_log(NDLOG_DBG, "# switchAcctId          : %s", logItem.switchAcctId);
+        nd_log(NDLOG_DBG, "# securStepNo           : %s", logItem.securStepNo);
+        nd_log(NDLOG_DBG, "# pamCertDtlCode        : %s", logItem.pamCertDtlCode);
+        nd_log(NDLOG_DBG, "# pamCertDtlAuthCode    : %s", logItem.pamCertDtlAuthCode);
+
 		nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
 
 		isSuSession = true;
@@ -1845,7 +1969,17 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 				nd_log(NDLOG_TRC, "PAM policy verification completed - Blocked by SAM policy.(%s)", info->current_user);
 
 				/**/
-				nd_log(NDLOG_ERR, "[HIW-AGT-PAM-PMER-000001] Access denied due to SAM-policy | User: %s | Remote Host: %s | Terminal: %s | AuthNo: %s", info->current_user, logItem.userIp, tty, su_sam_agt_authno);
+				nd_log(NDLOG_ERR, 
+				       "[HIW-AGT-PAM-PMER-000001] Access denied due to SAM-policy"
+				       " | User         = %s"
+				       " | Remote Host  = %s"
+				       " | Terminal     = %s"
+				       " | AuthNo       = %s",
+				       info->current_user, 
+				       logItem.userIp, 
+				       tty, 
+				       su_sam_agt_authno);
+
 
 				retval = PAM_PERM_DENIED;
 				goto pam_sm_auth_ex;
@@ -1859,7 +1993,16 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 			nd_log(NDLOG_TRC, "PAM policy verification completed - Allowed by PAM & SAM policy.(%s)", info->current_user);
 
 			/**/
-			nd_log(NDLOG_INF, "[NDA-PAM] Access granted by SAM-policy | User: %s | Remote Host: %s | Terminal: %s | AuthNo: %s", info->current_user, logItem.userIp, tty, su_sam_agt_authno);
+			nd_log(NDLOG_INF, 
+			       "[NDA-PAM] Access granted by SAM-policy"
+			       " | User         = %s"
+			       " | Remote Host  = %s"
+			       " | Terminal     = %s"
+			       " | AuthNo       = %s",
+			       info->current_user, 
+			       logItem.userIp, 
+			       tty, 
+			       su_sam_agt_authno);
 
 			memset(sDataEnv_var, 0x00, sizeof(sDataEnv_var));
 
@@ -1883,7 +2026,16 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 				nd_log(NDLOG_TRC, "PAM Policy verification failed. - Blocked by PAM policy.(%s)", info->current_user);
 
 				/**/
-				nd_log(NDLOG_ERR, "[HIW-AGT-PAM-PMER-000002] Access denied due to PAM-policy | User: %s | Remote Host: %s | Terminal: %s | AuthNo: %s", info->current_user, logItem.userIp, tty, su_pam_agt_authno);
+				nd_log(NDLOG_ERR, 
+				       "[HIW-AGT-PAM-PMER-000002] Access denied due to PAM-policy"
+				       " | User         = %s"
+				       " | Remote Host  = %s"
+				       " | Terminal     = %s"
+				       " | AuthNo       = %s",
+				       info->current_user, 
+				       logItem.userIp, 
+				       tty, 
+				       su_pam_agt_authno);
 
 				pam_logging = true;
 
@@ -1897,7 +2049,16 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 			bRetPamPolicy = true;
 
 			/**/
-			nd_log(NDLOG_INF, "[NDA-PAM] Access granted by PAM-policy | User: %s | Remote Host: %s | Terminal: %s | AuthNo: %s", info->current_user, logItem.userIp, tty, su_pam_agt_authno);
+			nd_log(NDLOG_INF, 
+			       "[NDA-PAM] Access granted by PAM-policy"
+			       " | User         = %s"
+			       " | Remote Host  = %s"
+			       " | Terminal     = %s"
+			       " | AuthNo       = %s",
+			       info->current_user, 
+			       logItem.userIp, 
+			       tty, 
+			       su_pam_agt_authno);
 
 			memset(sDataEnv_var, 0x00, sizeof(sDataEnv_var));
 			snprintf(sDataEnv_var, sizeof(sDataEnv_var), HIWARE_SU_PAM_AGT_AUTHNO_FORMAT, su_pam_agt_authno ? su_pam_agt_authno : "");
@@ -1909,7 +2070,15 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 		snprintf(pamCertTpCode, sizeof(pamCertTpCode), "%s", PAM_SU_LOGIN);
 
 		/**/
-		nd_log(NDLOG_INF, "[NDA-PAM] 'su' operation successful | User switched to: %s | Terminal: %s | Remote Host: %s", logItem.connAcctId, tty, logItem.userIp);
+		nd_log(NDLOG_INF, 
+		       "[NDA-PAM] 'su' operation successful"
+		       " | User switched to = %s"
+		       " | Terminal         = %s"
+		       " | Remote Host      = %s",
+		       logItem.connAcctId, 
+		       tty, 
+		       logItem.userIp);
+
 
 		retval = PAM_SUCCESS;
 		goto pam_sm_auth_ex;
@@ -2014,12 +2183,19 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 			struct tm *tm_info = localtime(&current_time);
 			int current_wday = tm_info->tm_wday == 0 ? 7 : tm_info->tm_wday; // Adjust for Sunday being 7
 
-			nd_log(NDLOG_DBG, "Retrieving time data for policy inspection. | time: %s | wday: %d", ctime(&current_time), current_wday);
+			nd_log(NDLOG_DBG, 
+			       "Retrieving time data for policy inspection."
+			       " | Time = %s"
+			       " | Weekday = %d", 
+			       ctime(&current_time), 
+			       current_wday);
+
 
 			if (su_sam_agt_authno)
 			{
 				snprintf(logItem.agtAuthNo, sizeof(logItem.agtAuthNo), "%s", su_sam_agt_authno);
-				if (!check_sam_su_policy(getPamRuleFilePath(sDataHomeDir), info->current_user, su_sam_agt_authno, current_time, current_wday, &sam_logging))
+				if (!check_sam_su_policy(getPamRuleFilePath(sDataHomeDir), info->current_user, 
+							su_sam_agt_authno, current_time, current_wday, &sam_logging))
 				{
 					snprintf(logItem.svrConnFailRsnCode, sizeof(logItem.svrConnFailRsnCode), PAM_SVR_FAIL_OS_AUTH_FAIL);
 					snprintf(logItem.securStepNo, sizeof(logItem.securStepNo), "%s", PAM_SECUR_STEP_NDSHELL);
@@ -2030,7 +2206,17 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 					nd_log(NDLOG_INF, "PAM policy verification completed - Blocked by SAM policy.(%s)", info->current_user);
 
 					/**/
-					nd_log(NDLOG_ERR, "[HIW-AGT-PAM-PMER-000001] Access denied due to SAM-policy | User: %s | Remote Host: %s | Terminal: %s | AuthNo: %s", info->current_user, "127.0.0.1", "su", su_sam_agt_authno);
+					nd_log(NDLOG_ERR, 
+					       "[HIW-AGT-PAM-PMER-000001] Access denied due to SAM-policy"
+					       " | User         = %s"
+					       " | Remote Host  = %s"
+					       " | Terminal     = %s"
+					       " | AuthNo       = %s",
+					       info->current_user, 
+					       "127.0.0.1", 
+					       "su", 
+					       su_sam_agt_authno);
+
 
 					retval = PAM_PERM_DENIED;
 					goto pam_sm_auth_ex;
@@ -2044,7 +2230,16 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 				nd_log(NDLOG_TRC, "PAM policy verification completed - Allowed by PAM & SAM policy.(%s)", info->current_user);
 
 				/**/
-				nd_log(NDLOG_INF, "[HIW-AGT-PAM-PMER-000002] Access granted by PAM-policy | User: %s | Remote Host: %s | Terminal: %s | AuthNo: %s", info->current_user, "127.0.0.1", "su", su_sam_agt_authno);
+				nd_log(NDLOG_INF, 
+				       "[HIW-AGT-PAM-PMER-000002] Access granted by PAM-policy"
+				       " | User         = %s"
+				       " | Remote Host  = %s"
+				       " | Terminal     = %s"
+				       " | AuthNo       = %s",
+				       info->current_user, 
+				       "127.0.0.1", 
+				       "su", 
+				       su_sam_agt_authno);
 
 				retval = PAM_SUCCESS;
 			}
@@ -2062,7 +2257,16 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 					nd_log(NDLOG_TRC, "PAM Policy verification failed. - Blocked by PAM policy.(%s)", info->current_user);
 
 					/**/
-					nd_log(NDLOG_ERR, "[HIW-AGT-PAM-PMER-000002] Access denied due to PAM-policy | User: %s | Remote Host: %s | Terminal: %s | AuthNo: %s", info->current_user, "127.0.0.1", "su", su_pam_agt_authno);
+					nd_log(NDLOG_ERR, 
+					       "[HIW-AGT-PAM-PMER-000002] Access denied due to PAM-policy"
+					       " | User         = %s"
+					       " | Remote Host  = %s"
+					       " | Terminal     = %s"
+					       " | AuthNo       = %s",
+					       info->current_user, 
+					       "127.0.0.1", 
+					       "su", 
+					       su_pam_agt_authno);
 
 					retval = PAM_PERM_DENIED;
 					goto pam_sm_auth_ex;
@@ -2077,7 +2281,16 @@ PAM_EXTERN int pam_sm_authenticate(pam_handle_t *pamh, int flags,
 				nd_log(NDLOG_TRC, "PAM Policy verification was successful.(%s)", info->current_user);
 
 				/**/
-				nd_log(NDLOG_INF, "[NDA-PAM] Access granted by PAM-policy | User: %s | Remote Host: %s | Terminal: %s | AuthNo: %s", info->current_user, "127.0.0.1", "su", su_pam_agt_authno);
+				nd_log(NDLOG_INF, 
+				       "[NDA-PAM] Access granted by PAM-policy"
+				       " | User         = %s"
+				       " | Remote Host  = %s"
+				       " | Terminal     = %s"
+				       " | AuthNo       = %s",
+				       info->current_user, 
+				       "127.0.0.1", 
+				       "su", 
+				       su_pam_agt_authno);
 
 				retval = PAM_SUCCESS;
 			}
@@ -2271,33 +2484,16 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags,
 	(void)argv;
 	(void)flags;
 
-	char pamAgtAuthNo[ND_AGTAUTHNO_MAX_LEN] = {
-		0,
-	};
-	char agtAuthNo[ND_AGTAUTHNO_MAX_LEN] = {
-		0,
-	};
-	char agtNo[16] = {
-		0,
-	};
-	char agt_auth_Number[4] = {
-		0,
-	};
-	char pamCertDtlCode[4] = {
-		0,
-	};
-	char pamCertDtlAuthCode[4] = {
-		0,
-	};
-	char agtConnFormTpCode[4] = {
-		0,
-	};
-	char securStepNo[ND_SECUR_STEP_NO_MAX_LEN] = {
-		0,
-	};
-	char pamCertTpCode[4] = {
-		0,
-	};
+	char pamAgtAuthNo[ND_AGTAUTHNO_MAX_LEN] = {0};
+	char agtAuthNo[ND_AGTAUTHNO_MAX_LEN] = {0};
+	char agtNo[16] = {0};
+	char agt_auth_Number[4] = {0};
+	char pamCertDtlCode[4] = {0};
+	char pamCertDtlAuthCode[4] = {0};
+	char agtConnFormTpCode[4] = {0};
+	char securStepNo[ND_SECUR_STEP_NO_MAX_LEN] = {0};
+	char pamCertTpCode[4] = {0};
+
 	int pam_pri_no, pam_action, pam_logging, sam_pri_no, sam_action, sam_logging;
 	char *agt_auth_no = NULL, *ndshell_agtAuthNo = NULL;
 
@@ -2310,8 +2506,6 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags,
 	const char *tty = get_pam_item_str(pamh, PAM_TTY);
 	const char *rhost = get_pam_item_str(pamh, PAM_RHOST);
 	const char *user = get_pam_item_str(pamh, PAM_USER);
-
-	nd_log(NDLOG_TRC, "pam_sm_close_session function start.");
 
 	struct _msg_header_ header = {
 
@@ -2344,17 +2538,12 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags,
 
 	g_nDataSshPort = get_ssh_listening_port();
 
-	if (agent_id == NULL)
-	{
-		//(LOG_ERR, "pam_sm_close_session agent_id NULL");
-	}
-
-	if (sessionkey == NULL)
+	if (!sessionkey)
 	{
 		sessionkey = getenv(ENV_HIWARE_SESSIONKEY);
 	}
 
-	if (pam_loast_auth == NULL)
+	if (!pam_loast_auth)
 	{
 		pam_loast_auth = getenv(PAM_BAK_LAST_AUTH);
 	}
@@ -2376,16 +2565,18 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags,
 	{
 		info = get_console_session_info(pamh);
 		snprintf(agtConnFormTpCode, sizeof(agtConnFormTpCode), "%s", PAM_CONN_CONSOLE);
+
 		const char *service;
 		int retval = pam_get_item(pamh, PAM_SERVICE, (const void **)&service);
+
 		if (retval != PAM_SUCCESS)
 		{
 			//   return retval;
 		}
 		snprintf(pamCertTpCode, sizeof(pamCertDtlCode), "%s", PAM_LOGOUT);
 
-		if (service != NULL && (strcmp(service, STR_SU) == 0 || strcmp(service, STR_SUL) == 0))
-		{
+		if (service && (strcmp(service, STR_SU) == 0 || strcmp(service, STR_SUL) == 0)) {
+		
 			snprintf(pamCertTpCode, sizeof(pamCertTpCode), "%s", PAM_SU_LOGOUT);
 		}
 	}
@@ -2403,7 +2594,7 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags,
 	struct tm *tm_info = localtime(&current_time);
 	int current_wday = tm_info->tm_wday == 0 ? 7 : tm_info->tm_wday; // Adjust for Sunday being 7
 
-	nd_log(NDLOG_TRC, "Starting the SAM-policy check.");
+	nd_log(NDLOG_TRC, "Beginning SAM policy validation process.");
 
 	snprintf(securStepNo, sizeof(securStepNo), "%s", PAM_SECUR_STEP_PAM);
 
@@ -2424,7 +2615,7 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags,
 		goto pam_sm_close_session_fin;
 	}
 
-	nd_log(NDLOG_TRC, "Starting the PAM-policy check.");
+	nd_log(NDLOG_TRC, "Beginning PAM policy validation process.");
 
 	if (check_pam_policy(getPamRuleFilePath(sDataHomeDir), info->remote_host, info->current_user, current_time, current_wday, &agt_auth_no, &pam_action, &pam_logging) == 1)
 	{
@@ -2433,7 +2624,15 @@ PAM_EXTERN int pam_sm_close_session(pam_handle_t *pamh, int flags,
 
 	snprintf(pamAgtAuthNo, sizeof(pamAgtAuthNo), "%s", agt_auth_no ? agt_auth_no : "");
 
-	nd_log(NDLOG_INF, "[NDA-PAM] User session closed | User: %s | Remote Host: %s | Terminal: %s", info->current_user, info->remote_host, tty);
+	nd_log(NDLOG_INF, 
+	       "[NDA-PAM] User session closed"
+	       " | User         = %s"
+	       " | Remote Host  = %s"
+	       " | Terminal     = %s",
+	       info->current_user, 
+	       info->remote_host, 
+	       tty);
+
 
 pam_sm_close_session_fin:
 
@@ -2453,8 +2652,14 @@ pam_sm_close_session_fin:
 			snprintf(agtConnFormTpCode, sizeof(agtConnFormTpCode), "%s", master_session_type);
 		}
 
-		logitem = create_archive_log("", "", PAM_AUTH_SUCCESS, "", agent_id, agtConnFormTpCode, agtAuthNo, "", info->remote_host, securStepNo,
-									 sessionkey, su_sessionkey, su_presessionkey, info->current_user, "", pamAgtAuthNo, agent_id, pamCertTpCode, pamCertDtlAuthCode, "", "", "", "");
+		logitem = create_archive_log(       
+		    "", "", PAM_AUTH_SUCCESS, "",   
+		    agent_id, agtConnFormTpCode, agtAuthNo, "", 
+		    info->remote_host, securStepNo, sessionkey, 
+		    su_sessionkey, su_presessionkey, info->current_user, 
+		    "", pamAgtAuthNo, agent_id, pamCertTpCode, 
+		    pamCertDtlAuthCode, "", "", "", "" 
+		);
 		nd_pam_archive_log(header, *logitem, (char *)sDataHomeDir);
 		free_archive_log(logitem);
 	}

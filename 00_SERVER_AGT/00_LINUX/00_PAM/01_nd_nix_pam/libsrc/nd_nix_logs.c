@@ -87,7 +87,13 @@ void nd_pam_archive_log(struct _msg_header_ header, struct _archive_log logitem,
 
         sDataJsonLog = create_pam_archivelogdate_using_JSON(logitem);
 
-        nd_log(NDLOG_TRC, "Generating JSON data for log : (%s)", sDataJsonLog);
+
+        nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
+        nd_log(NDLOG_TRC, "Generating JSON data for log: ");
+        nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
+        nd_log(NDLOG_TRC, "%s", sDataJsonLog);
+        nd_log(NDLOG_TRC, "--------------------------------------------------------------------");
+
         retval = sending_data_to_logger(header.sAgentId, header.iMsgType, header.iMsgCode, ND_PAM_VERSION, sDataJsonLog);
         if (retval == 0)
         {
@@ -1127,6 +1133,8 @@ void nd_pam_devlog(int level, char *filename, int line, const char *fmt, ...)
         }
 
         char *log_level = get_value_from_inf(g_sConfFilePath, "AGENT_INFO", "AGENT_LOG_LEVEL");
+        char *log_code_trace = get_value_from_inf(g_sConfFilePath, "AGENT_INFO", PAM_CONF_KEY_AGT_PAM_LOGCODE_TRACE);
+
         nSettingLevel = log_level ? atoi(log_level) : 1;
 
         if (nSettingLevel < level && level != NDLOG_ERR)
@@ -1140,7 +1148,14 @@ void nd_pam_devlog(int level, char *filename, int line, const char *fmt, ...)
         vsnprintf(sBakStr, sizeof(sBakStr), fmt, args);
         va_end(args);
 
-        snprintf(sLogMsg, sizeof(sLogMsg), "%s(%s) <%s:%d>    %s\n", timestamp, nd_log_level[level].stLevel, filename, line, sBakStr);
+        if (strcmp (log_code_trace, SET_MODE_ON) == 0 )
+        {
+            snprintf(sLogMsg, sizeof(sLogMsg), "%s(%s) <%s:%d>    %s\n", timestamp, nd_log_level[level].stLevel, filename, line, sBakStr);
+        }
+        else
+        {
+            snprintf(sLogMsg, sizeof(sLogMsg), "%s(%s)    %s\n", timestamp, nd_log_level[level].stLevel,  sBakStr);
+        }
 
         if (sLogMsg[strlen(sLogMsg) - 1] == '\n')
                 sLogMsg[strlen(sLogMsg) - 1] = '\0';
