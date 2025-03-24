@@ -47,7 +47,7 @@
 #include "libsrc/nd_nix_rules.h"
 #include "libsrc/nd_nix_log.h"
 
-#define DRIVER_AUTH "Saber-toothed cat <pingye@netand.co.kr>"
+#define DRIVER_AUTH "NETAND Security Team"
 #define DRIVER_DESC "NETAND's network filtering driver that runs on Linux"
 
 #define NETLINK_USER 31
@@ -136,7 +136,14 @@ char *log_buffer[MAX_LOGS];
 
 unsigned int session_m_cnt = 0;
 
-
+/**
+ * calculate_tcp_checksum - 주어진 skb로부터 TCP 체크섬을 계산한다
+ * @skb: TCP 패킷이 포함된 소켓 버퍼
+ *
+ * 반환값:
+ *   계산된 TCP 체크섬 (__sum16)
+ *   IP 헤더가 없거나 TCP 프로토콜이 아닌 경우, 또는 TCP 헤더가 없으면 0 반환
+ */
 __sum16 calculate_tcp_checksum(struct sk_buff *skb)
 {
 
@@ -146,18 +153,21 @@ __sum16 calculate_tcp_checksum(struct sk_buff *skb)
     __sum16 checksum;
 
     // IP 헤더와 TCP 헤더에 대한 포인터 설정
+    // IP 헤더 포인터 획득
     iph = ip_hdr(skb);
     if (!iph || iph->protocol != IPPROTO_TCP)
-        return 0;
+        return 0;// IP 헤더가 없거나 TCP 프로토콜이 아니면 체크섬 계산 생략
 
+    // TCP 헤더 포인터 획득
     tcph = tcp_hdr(skb);
     if (!tcph)
-        return 0;
+        return 0;// TCP 헤더가 없으면 생략
 
     // TCP 세그먼트 길이 계산
+    // 전체 IP 패킷 길이에서 IP 헤더 길이를 제외하여 TCP 페이로드 길이 계산
     tcp_len = ntohs(iph->tot_len) - iph->ihl * 4;
 
-    // TCP 체크섬 계산
+    // TCP 체크섬 계산: 의사 헤더 포함한 체크섬 생성
     checksum = csum_tcpudp_magic(iph->saddr, iph->daddr,
                                  tcp_len, IPPROTO_TCP,
                                  csum_partial(tcph, tcp_len, 0));
@@ -166,16 +176,34 @@ __sum16 calculate_tcp_checksum(struct sk_buff *skb)
 }
 
 
-/*
+/**
+ * hash_function - protocol과 port 값을 기반으로 해시 테이블 인덱스를 계산
+ * @protocol: 프로토콜 번호 (예: IPPROTO_TCP 또는 IPPROTO_UDP)
+ * @port: 포트 번호
  *
+ * 반환값:
+ *   PORT_TABLE_SIZE 범위 내의 해시 인덱스
+ *
+ * 동작 설명:
+ *   - protocol과 port를 XOR 연산 후 hash_32 함수를 이용해 해시 값 생성
+ *   - 해시 값의 비트를 HASH_BITS(port_table) 만큼 사용
+ *   - 결과 값을 PORT_TABLE_SIZE로 나눠 테이블 인덱스를 제한
  */
 static inline unsigned int hash_function(__be32 protocol, unsigned short port)
 {
 	return (hash_32((unsigned long)(protocol ^ port), HASH_BITS(port_table))) % PORT_TABLE_SIZE;
 }
 
-/*
+/**
+ * get_port_info_count - 해시 테이블(port_table)에 등록된 port_info 항목 수를 반환
  *
+ * 반환값:
+ *   현재 포트 정보 해시 테이블에 저장된 항목 개수 (size_t)
+ *
+ * 동작 설명:
+ *   - hash_for_each 매크로를 사용하여 port_table 전체를 순회
+ *   - 각 엔트리를 순회하며 count를 증가
+ *   - 최종적으로 누적된 count 반환
  */
 size_t get_port_info_count(void)
 {
@@ -183,6 +211,7 @@ size_t get_port_info_count(void)
 	struct port_info *info;
 	unsigned long index;
 
+    // 해시 테이블(port_table)의 각 버킷을 순회하며 항목 수 계산
 	hash_for_each(port_table, index, info, node)
 	{
 		count++;
@@ -191,57 +220,101 @@ size_t get_port_info_count(void)
 	return count;
 }
 
-/*
+/**
+ * save_port_info - 주어진 프로토콜과 포트 정보를 해시 테이블에 저장
+ * @protocol: IP 프로토콜 번호 (예: IPPROTO_TCP)
+ * @new_port: 저장할 포트 번호
  *
+ * 동작 설명:
+ *   - 주어진 protocol과 new_port를 기반으로 해시 인덱스를 계산
+ *   - struct port_info를 동적 할당 후 값 설정
+ *   - 해당 해시 버킷 리스트의 앞에 추가
+ *   - session_m_cnt를 증가시켜 저장된 세션 수를 추적
  */
 void save_port_info(__be32 protocol, unsigned short new_port)
 {
 	struct port_info *info;
 	unsigned int index = hash_function(protocol, new_port);
 
+    // port_info 구조체 메모리 할당
 	info = kmalloc(sizeof(struct port_info), GFP_KERNEL);
 	if (!info)
 	{
+        // 메모리 할당 실패 시 아무 작업도 하지 않음
 		return;
 	}
 
+    // 포트 정보 설정
 	info->protocol = protocol;
 	info->sport = new_port;
 
+    // 해시 테이블의 해당 버킷에 추가 (앞쪽에 삽입)
 	hlist_add_head(&info->node, &port_table[index]);
+
+    // 전체 세션 수 증가
 	session_m_cnt++;
 }
 
-/*
+
+/**
+ * check_port_info - 주어진 프로토콜과 포트가 해시 테이블에 존재하는지 확인
+ * @protocol: IP 프로토콜 번호 (예: IPPROTO_TCP)
+ * @port: 확인할 포트 번호
  *
+ * 반환값:
+ *   해당 프로토콜과 포트가 해시 테이블에 존재하면 true, 아니면 false
+ *
+ * 동작 설명:
+ *   - protocol과 port를 기반으로 해시 인덱스를 계산
+ *   - 해당 인덱스의 해시 리스트를 순회하면서 일치 항목이 있는지 확인
  */
 bool check_port_info(__be32 protocol, unsigned short port)
 {
 	struct port_info *info;
 	struct hlist_node *tmp;
 	unsigned int index = hash_function(protocol, port);
+
+    // 해당 해시 버킷의 리스트 순회
 	hlist_for_each_entry_safe(info, tmp, &port_table[index], node)
 	{
 		if (info->protocol == protocol && info->sport == port)
 		{
+            // 일치하는 항목 발견 시 true 반환
 			return true;
 		}
 	}
 	return false;
 }
 
-/*
+/**
+ * remove_port_info - 주어진 프로토콜과 포트에 해당하는 항목을 해시 테이블에서 제거
+ * @protocol: IP 프로토콜 번호 (예: IPPROTO_TCP)
+ * @port: 제거할 포트 번호
  *
+ * 반환값:
+ *   해당 항목이 존재하여 제거되었으면 true, 없으면 false
+ *
+ * 동작 설명:
+ *   - 해시 인덱스를 계산하여 해당 버킷을 순회
+ *   - 프로토콜과 포트가 일치하는 항목을 찾으면:
+ *       - 리스트에서 제거
+ *       - 메모리 해제
+ *       - 세션 카운터 감소
+ *       - true 반환
+ *   - 일치 항목이 없으면 false 반환
  */
 bool remove_port_info(__be32 protocol, unsigned short port)
 {
 	struct port_info *info;
 	struct hlist_node *tmp;
 	unsigned int index = hash_function(protocol, port);
+
+    // 해시 테이블 버킷 순회
 	hlist_for_each_entry_safe(info, tmp, &port_table[index], node)
 	{
 		if (info->protocol == protocol && info->sport == port)
 		{
+            // 일치 항목 삭제 및 해제
 			hlist_del(&info->node);
 			kfree(info);
 			session_m_cnt--;
@@ -287,8 +360,16 @@ static int is_port_active(__be32 ip, __be16 port)
 }
 #endif //_PORT_CHK_ACTIVE
 
-/*
+/**
+ * nd_device_ioctl - 사용자 공간에서 보낸 IOCTL 명령을 처리하는 함수
+ * @file: 파일 객체 포인터
+ * @cmd: IOCTL 명령 코드
+ * @arg: 사용자 공간에서 전달된 인자 (보통 포인터)
  *
+ * 반환값:
+ *   0 성공
+ *  -EFAULT 사용자 공간으로 복사 실패
+ *  그 외 상황에 따라 적절한 에러코드 반환 가능
  */
 static long nd_device_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 {
@@ -303,15 +384,9 @@ static long nd_device_ioctl(struct file *file, unsigned int cmd, unsigned long a
 	__u16 uServicePort = 0;
 	char sServicePortData[6] = {0,};
 
-	char sErrMsg[256] = {
-		0,
-	};
-	char cmd_str_data[MAX_STRING_LENGTH] = {
-		0,
-	};
-	char sLogData[LOG_MSG_SIZE] = {
-		0,
-	};
+	char sErrMsg[256] = {0,};
+	char cmd_str_data[MAX_STRING_LENGTH] = {0,};
+	char sLogData[LOG_MSG_SIZE] = {0,};
 
 	//snprintf(sLogData, sizeof(sLogData), "TRACE: Received IOCTL command [0x%x] with argument [0x%lx] int (%d)", cmd, arg, cmd);
 	//ND_LOG(LOG_TRC, sLogData);
@@ -833,8 +908,22 @@ static long nd_device_ioctl(struct file *file, unsigned int cmd, unsigned long a
 }
 
 #ifdef _MON_SESSION
-/*
+
+
+/**
+ * monitor_conntrack_hook - Netfilter hook 함수, TCP 패킷의 연결 추적 상태를 모니터링
+ * @priv: hook 등록 시 전달된 private 데이터 (사용 안 함)
+ * @skb: 처리할 소켓 버퍼
+ * @state: Netfilter hook state (입출력 디바이스, 위치 등)
  *
+ * 반환값:
+ *   NF_ACCEPT - 패킷을 계속 통과시킴
+ *
+ * 동작 설명:
+ *   - IP 헤더를 추출하고 TCP 프로토콜 여부 확인
+ *   - nf_conntrack을 통해 연결 추적 상태(ctinfo)를 가져옴
+ *   - 연결 상태별로 로깅 또는 특정 동작을 할 수 있는 기반 마련
+ *   - 현재는 모든 패킷을 ACCEPT
  */
 static unsigned int monitor_conntrack_hook(void *priv,
 										   struct sk_buff *skb,
@@ -900,22 +989,37 @@ static unsigned int monitor_conntrack_hook(void *priv,
 /*
 	//A function that extracts the domain name.
 */
+/**
+ * extract_domain_name - DNS 패킷에서 질의 도메인 이름을 추출
+ * @dns_data: DNS 패킷 데이터 포인터 (UDP payload 기준)
+ * @dns_len: DNS 데이터의 전체 길이
+ *
+ * 설명:
+ *   - DNS 헤더는 12바이트로 고정되어 있으며, 이후부터 도메인 질의 정보가 시작됨
+ *   - 질의 이름은 label 형식으로 구성되어 있으며, 각 label은 [length][data] 형태
+ *   - 예: "www.example.com" → [3]www[7]example[3]com[0]
+ *   - 도메인 이름이 너무 크거나 포맷이 잘못된 경우 중단
+ *   - 결과는 로그(DEBUG)로 출력됨
+ */
 static void  extract_domain_name(const unsigned char *dns_data, unsigned int dns_len)
 {
 	unsigned int i = 12; // DNS 헤더는 12 바이트
-	unsigned char domain[256];
+	unsigned char domain[256];// 도메인 이름을 저장할 버퍼
 	unsigned int pos = 0;
 
+    // 유효성 검사: 데이터가 충분히 있는지 확인
 	if ( !dns_data || dns_len <= 12) {
 		/**/
 		//printk(KERN_INFO "DNS packet too short\n");
 		return ;
 	}
 
+    // 도메인 이름 파싱 시작
 	while (i < dns_len && dns_data[i] != 0) {
 		unsigned int label_len = dns_data[i];
 		i++;
 
+        // label 길이가 남은 데이터 범위를 초과하면 잘못된 패킷
 		if (label_len + i > dns_len) {
 			/*
 			printk(KERN_INFO "Invalid DNS packet: label length out of bounds\n");
@@ -933,12 +1037,16 @@ static void  extract_domain_name(const unsigned char *dns_data, unsigned int dns
 			return;
 		}
 
+        // label 복사
 		memcpy(domain + pos, dns_data + i, label_len);
 		pos += label_len;
+
+        // 각 label 사이에 '.' 추가
 		domain[pos++] = '.';
 		i += label_len;
 	}
 
+    // 마지막 '.'을 '\0'로 대체하여 문자열 종료
 	if (pos > 0) {
 		domain[pos - 1] = '\0'; // 마지막 점을 제거하고 null-terminate
 	} else {
@@ -950,6 +1058,16 @@ static void  extract_domain_name(const unsigned char *dns_data, unsigned int dns
 	//return domain;
 }
 
+
+/**
+ * extract_ip_addresses - DNS 응답 패킷에서 Answer Section의 IP 주소를 추출
+ * @dns_data: DNS 패킷 데이터 (UDP payload 기준)
+ * @dns_len: 데이터 전체 길이
+ *
+ * 설명:
+ *   - DNS 응답 패킷에서 Answer Section을 파싱하여 IPv4 주소를 추출
+ *   - RDATA의 길이가 4인 경우 IPv4 주소로 간주하여 로그 출력
+ */
 static void extract_ip_addresses(const unsigned char *dns_data, unsigned int dns_len) {
     unsigned int i = 12; // DNS 헤더는 12 바이트
     unsigned int answer_count;
@@ -1014,43 +1132,22 @@ static void extract_ip_addresses(const unsigned char *dns_data, unsigned int dns
 
 #endif //_DNS_QUERY_SUPPORT
 
-/*
+/**
+ * nd_nix_hook_inbound_func - Netfilter HOOK(INBOUND) 함수
+ * @priv: 사용자 정의 private 데이터 (사용되지 않음)
+ * @skb: 현재 처리 중인 소켓 버퍼
+ * @state: Netfilter 훅 상태 정보 (입출력 인터페이스 등 포함)
  *
+ * 설명:
+ *   - 조건에 따라 패킷의 TCP 포트를 수정 (테스트 용도)
+ *   - 이후 로직에서는 5-tuple 추출, 룰 검사 등 보안 처리를 수행할 수 있음
+ *
+ * 반환값:
+ *   - NF_ACCEPT: 패킷 통과 허용
+ *   - (향후 NF_DROP 등으로 확장 가능)
  */
 unsigned int nd_nix_hook_inbound_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
-#ifdef _test
-	struct iphdr *iph;
-    struct tcphdr *tcph;
-    struct udphdr *udph;
-
-    if (!skb)
-        return NF_ACCEPT;
-
-    iph = ip_hdr(skb);
-    if (!iph)
-        return NF_ACCEPT;
-
-    // Check if it's a TCP packet
-    if (iph->protocol == IPPROTO_TCP) {
-        tcph = tcp_hdr(skb);
-
-        // Example: Change destination port 80 to 8080
-        if (ntohs(tcph->dest) == 7001) {
-            //printk(KERN_INFO "Changing TCP port 80 to 8080\n");
-            tcph->dest = htons(7002);
-
-            // Recalculate checksum
-            tcph->check = 0;
-            tcph->check = tcp_v4_check(sizeof(*tcph), iph->saddr, iph->daddr,
-                                        csum_partial(tcph, sizeof(*tcph), 0));
-        }
-    }
-
-	return NF_ACCEPT;
-#endif 
-
-	//TEST
 	__sum16 original_checksum, calculated_checksum;
 
 	unsigned char *h;
@@ -1059,31 +1156,29 @@ unsigned int nd_nix_hook_inbound_func(void *priv, struct sk_buff *skb, const str
 	uint16_t sport = 0, dport = 0, datalen = 0;
 	int nChkRuleResult = ND_ACT_FLOWRULE_NOTFOUND;
 	int ret = 0;
+
+    /*
+     * if you use dns query..
+     */
 	/*
 	char *dns_query;
-    	unsigned short dns_length;
+    unsigned short dns_length;
+    struct udphdr *udp_header;
 	*/
 
-	//ND_LOG(LOG_DBG, "DEBUG: nd_nix_hook_inbound_func -- 001");
-	// struct nd_packets_applied_to_policy *collect_data;
 	struct nd_modifled_packet_result *collect_data;
 	struct nd_5tuple_data current_5tuple;
 	struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
 	struct net_device *dev = skb->dev;
-	/*
-	struct udphdr *udp_header;
-	*/
 
-	//original_checksum = tcph->check;
-
-	//calculated_checksum = calculate_tcp_checksum(skb);
-
-	//ND_LOG(LOG_DBG, "Original checksum: 0x%04x\n", ntohs(original_checksum));
-    	//ND_LOG(LOG_DBG, "Calculated checksum: 0x%04x\n", ntohs(calculated_checksum));
+    /*
+	ND_LOG(LOG_DBG, "Original checksum: 0x%04x\n", ntohs(original_checksum));
+    ND_LOG(LOG_DBG, "Calculated checksum: 0x%04x\n", ntohs(calculated_checksum));
+    */
 
 	if (!iph) {
-		 ND_LOG(LOG_DBG, "DEBUG: nd_nix_hook_inbound_func -- 002");
 
+            ND_LOG(LOG_DBG, "Inbound packet dropped: Failed to extract IP header from skb (dev: %s)", dev ? dev->name : "unknown");
         	return NF_ACCEPT;
     	}	
 
@@ -1100,23 +1195,12 @@ unsigned int nd_nix_hook_inbound_func(void *priv, struct sk_buff *skb, const str
 				ret = nd_nfm_chk_nic_rule (ifa);
 				if (ret != ND_CHECK_OK)
 				{
-					 ND_LOG(LOG_DBG, "DEBUG: nd_nix_hook_inbound_func -- 003");
-
-					goto InboundExit;
+                     ND_LOG(LOG_DBG, "Inbound packet dropped: NIC rule check failed on interface [%s], IP: %pI4", dev->name, &ifa->ifa_address);
+                     
+                     goto InboundExit;
 				}
-				else
-				{
-					//printk (KERN_INFO "nd_nfm_chk_nic_rule ret == ND_CHECK_OK");
-				} 
 			}
 		}
-#ifdef _OLD_SRC
-		ret = nd_nfm_chk_nic_rule(dev->name, dev->dev_addr);
-		if (ret != ND_CHECK_OK)
-		{
-			//goto InboundExit;
-		}
-#endif //_OLD_SRC
 	}
 
 
@@ -1126,14 +1210,13 @@ unsigned int nd_nix_hook_inbound_func(void *priv, struct sk_buff *skb, const str
 		{
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0))
 			if (likely(skb_transport_header(skb) == (unsigned char *)iph)) )
-				{
-					//printk("transport_header is not set for kernel 0x%x\n", LINUX_VERSION_CODE);
+			{
+                //printk("transport_header is not set for kernel 0x%x\n", LINUX_VERSION_CODE);
 #else
 			if (!skb_transport_header_was_set(skb))
 			{
 #endif
 				h = (unsigned char *)iph + (iph->ihl << 2);
-				//skb_set_transport_header(skb, iph->ihl * 4);
 			}
 			else
 			{
@@ -1142,12 +1225,11 @@ unsigned int nd_nix_hook_inbound_func(void *priv, struct sk_buff *skb, const str
 
 			if (skb_linearize(skb) != 0)
 			{
-				 ND_LOG (LOG_DBG, "DEBUG: skb_linearize fail~~~~~~~~~~~~~~~~~");
-			        return NF_DROP;
+                 ND_LOG(LOG_ERR, "Failed to linearize skb: dropping packet on interface [%s]", skb->dev ? skb->dev->name : "unknown");
+			     return NF_DROP;
 			}
 
 			iph = ip_hdr(skb);
-//tcph = tcp_hdr(skb);
 
 			tcph = (struct tcphdr *)h;
 			sport = (unsigned int)ntohs(tcph->source);
@@ -1212,9 +1294,6 @@ unsigned int nd_nix_hook_inbound_func(void *priv, struct sk_buff *skb, const str
 				 	ND_LOG (LOG_DBG, "DEBUG: inbound packet information NOT MATCH RULE -> source ip:%pI4(%u),dest ip: %pI4(%u),sport: %u,  dport : %u \n", &iph->saddr,iph->saddr, &iph->daddr,iph->daddr, sport, dport);
 			}
 
-
-			
-
 			if (collect_data)
 				kfree(collect_data);
 
@@ -1224,36 +1303,32 @@ unsigned int nd_nix_hook_inbound_func(void *priv, struct sk_buff *skb, const str
 		case IPPROTO_UDP:
 		{
 #ifdef _DNS_QUERY_SUPPORT
-			unsigned char *dns_data;
-    			unsigned int dns_len;
-			struct udphdr *udph;
+            unsigned char *dns_data;
+            unsigned int dns_len;
+            struct udphdr *udph;
 
-			udph = udp_hdr(skb);
-			if (!udph ) 
-				return NF_ACCEPT;
+            udph = udp_hdr(skb);
+            if (!udph)
+                return NF_ACCEPT;
 
-			dns_data = (unsigned char *)((unsigned char *)udph + sizeof(struct udphdr));
-    			dns_len = ntohs(udph->len) - sizeof(struct udphdr);
+            // DNS 데이터 및 길이 계산
+            dns_data = (unsigned char *)udph + sizeof(struct udphdr);
+            dns_len = ntohs(udph->len) - sizeof(struct udphdr);
 
-	/*		// 소스 주소와 포트 정보
-			struct sockaddr_in src_addr;
-			src_addr.sin_addr = iph->saddr;
-			src_addr.sin_port = udph->source;
-	*/
-	/*		char * domain_name = extract_domain_name(dns_data, dns_len);
-			if (domain_name == NULL)	{
-				ND_LOG (LOG_DBG, "DEBUG: failed to get domain name");
-				return NF_ACCEPT;
-			}
-	*/
-			extract_domain_name(dns_data, dns_len);
+            // 포트 정보 추출
+            uint16_t sport = ntohs(udph->source);
+            uint16_t dport = ntohs(udph->dest);
 
-			extract_ip_addresses(dns_data, dns_len);
+            // 도메인 이름 및 응답 IP 추출 (내부 로그 출력한다고 가정)
+            extract_domain_name(dns_data, dns_len);
+            extract_ip_addresses(dns_data, dns_len);
 
-			//ND_LOG (LOG_DBG, "DEBUG: inbound packet information -> source ip:%pI4(%u),dest ip: %pI4(%u),sport: %u,  dport : %u \n", &iph->saddr,iph->saddr, &iph->daddr,iph->daddr, sport, dport);
+            // 패킷 정보 로그 출력
+            ND_LOG(LOG_DBG,
+                "Inbound UDP packet → src_ip: %pI4, dst_ip: %pI4, sport: %u, dport: %u",
+                &iph->saddr, &iph->daddr, sport, dport);
 
-		//	kfree (domain_name);
-			return NF_ACCEPT;
+            return NF_ACCEPT;
 #endif //_DNS_QUERY_SUPPORT
 
 			break;
@@ -1261,31 +1336,38 @@ unsigned int nd_nix_hook_inbound_func(void *priv, struct sk_buff *skb, const str
 
 		default:
 		{
-			//ND_LOG(LOG_TRC, "ioctl not found....");
 			break;
 		}
 	};
 
 InboundExit:
-	//ND_LOG(LOG_TRC, "Exiting nd_nix_hook_inbound_func");
 
 	return NF_ACCEPT;
 
 }
 
-/*
+
+/**
+ * nd_nix_hook_outbound_func - Netfilter HOOK(OUTBOUND) 함수
+ * @priv: 사용자 정의 private 데이터 (사용되지 않음)
+ * @skb: 현재 처리 중인 소켓 버퍼
+ * @state: Netfilter 훅 상태 정보
  *
+ * 설명:
+ *   - 패킷 송신 전단계에서 5-tuple 추출, 룰 검사, TCP 체크섬 검증 등을 수행
+ *   - g_nLkmMode가 OFF 상태면 즉시 NF_ACCEPT
+ *   - 이후 동작: 포트 필터링, 체크섬 검증, 로그 기록 등 확장 가능
+ *
+ * 반환값:
+ *   - NF_ACCEPT: 패킷을 계속 허용
+ *   - 향후 조건에 따라 NF_DROP 또는 NF_STOLEN 반환 가능
  */
 unsigned int nd_nix_hook_outbound_func(void *priv, struct sk_buff *skb, const struct nf_hook_state *state)
 {
-	//TEST
-        __sum16 original_checksum, calculated_checksum;
+    __sum16 original_checksum, calculated_checksum;
 	unsigned char *h;
-//	struct iphdr *ciph;
-  //  	struct tcphdr *ctcph;
 	struct tcphdr *tcph = tcp_hdr(skb);
 	struct iphdr *iph = ip_hdr(skb);;
-	//struct iphdr *iph = (struct iphdr *)skb_network_header(skb);
 	struct in_ifaddr *ifa;
 	uint16_t sport = 0, dport = 0;
 	uint16_t datalen = 0;
@@ -1305,67 +1387,51 @@ unsigned int nd_nix_hook_outbound_func(void *priv, struct sk_buff *skb, const st
 	dev = skb->dev;
 	if (dev)
 	{
-		if (dev->ip_ptr)
+        if (dev->ip_ptr)
+        {
+            /*
+             *  nic card rule : dose not use now...
+             */
+            for (ifa = dev->ip_ptr->ifa_list; ifa; ifa = ifa->ifa_next)     {
+                //printk (KERN_INFO  "%s has ipaddress [%pI4]",dev->name, &ifa->ifa_address);
+                ret = nd_nfm_chk_nic_rule (ifa);
+                if (ret != ND_CHECK_OK)
                 {
-                        for (ifa = dev->ip_ptr->ifa_list; ifa; ifa = ifa->ifa_next)     {
-                                //printk (KERN_INFO  "%s has ipaddress [%pI4]",dev->name, &ifa->ifa_address);
-                                ret = nd_nfm_chk_nic_rule (ifa);
-                                if (ret != ND_CHECK_OK)
-                                {
-                                        //goto InboundExit;
-                                        //printk (KERN_INFO "nd_nfm_chk_nic_rule ret != ND_CHECK_OK");
-                                }
-                                else
-                                {
-                                        //printk (KERN_INFO "nd_nfm_chk_nic_rule ret == ND_CHECK_OK");
-                                }
-                        }
+                        //goto InboundExit;
+                        //printk (KERN_INFO "nd_nfm_chk_nic_rule ret != ND_CHECK_OK");
                 }
-#ifdef _OLD_SRC
-		ret = nd_nfm_chk_nic_rule(dev->name, dev->dev_addr);
-		if (ret != ND_CHECK_OK)
-		{
-			goto Exit_function;
-		}
-#endif //_OLD_SRC
+                else
+                {
+                        //printk (KERN_INFO "nd_nfm_chk_nic_rule ret == ND_CHECK_OK");
+                }
+            }
+        }
 	}
-
-//	iph = (struct iphdr *)skb_network_header(skb);
 
 	switch (iph->protocol)
 	{
 		case IPPROTO_TCP:
 		{
 #if (LINUX_VERSION_CODE < KERNEL_VERSION(3, 9, 0))
-                        if (likely(skb_transport_header(skb) == (unsigned char *)iph)) )
-                        {
-                                //printk("transport_header is not set for kernel 0x%x\n", LINUX_VERSION_CODE);
+            if (likely(skb_transport_header(skb) == (unsigned char *)iph)) )
+            {
+                //printk("transport_header is not set for kernel 0x%x\n", LINUX_VERSION_CODE);
 #else
-                        if (!skb_transport_header_was_set(skb))
-                        {
+            if (!skb_transport_header_was_set(skb))
+            {
 #endif
-                                h = (unsigned char *)iph + (iph->ihl << 2);
-                                //skb_set_transport_header(skb, iph->ihl * 4);
-                        }
-                        else
-                        {
-                                h = skb_transport_header(skb);
-                        }
+                h = (unsigned char *)iph + (iph->ihl << 2);
+            }
+            else
+            {
+                h = skb_transport_header(skb);
+            }
 
-                        if (skb_linearize(skb) != 0)
-                        {
-                                 ND_LOG (LOG_DBG, "DEBUG: skb_linearize fail~~~~~~~~~~~~~~~~~");
-                                return NF_DROP;
-                        }
-
-			//iph = ip_hdr(skb);
-			
-			//tcph = (struct tcphdr *)h;
-			//tcph = tcp_hdr(skb);
-
-			//tcph = (struct tcphdr *)((__u8 *)iph + (iph->ihl * 4));
-
-			//tcph = (struct tcphdr *)skb_transport_header(skb);
+            if (skb_linearize(skb) != 0)
+            {
+                return NF_DROP;
+            }
+            
 			sport = (unsigned int)ntohs(tcph->source);
 			dport = (unsigned int)ntohs(tcph->dest);
 
@@ -1383,7 +1449,6 @@ unsigned int nd_nix_hook_outbound_func(void *priv, struct sk_buff *skb, const st
 			if (sport != 22)
 			{
 				 ND_LOG (LOG_DBG, "DEBUG: outbound packet information -> source ip:%pI4(%u),dest ip: %pI4(%u),sport: %u,  dport : %u \n", &iph->saddr,iph->saddr, &iph->daddr,iph->daddr, sport, dport);
-
 			}
 
 			if (nChkRuleResult == ND_ACT_FLOWRULE_APPLY)
@@ -1487,8 +1552,12 @@ static struct nf_hook_ops nf_monitor_hook = {
 };
 #endif
 
-/*
+/**
+ * nf_inbound_hook - Netfilter 훅 구조체 (Inbound 패킷용)
  *
+ * 설명:
+ *   - IPv4 기반 패킷에 대해 PREROUTING 단계에서 Inbound 훅 함수(nd_nix_hook_inbound_func)를 호출
+ *   - 패킷이 라우팅되기 전에 들어오는 인터페이스에서 잡아냄
  */
 static struct nf_hook_ops nf_inbound_hook = {
 
@@ -1498,8 +1567,14 @@ static struct nf_hook_ops nf_inbound_hook = {
 	.priority = NF_IP_PRI_FIRST,
 };
 
-/*
+
+/**
+ * nf_outbound_hook - Netfilter 훅 구조체 (Outbound 패킷용)
  *
+ * 설명:
+ *   - 로컬 시스템에서 생성된 IPv4 패킷이 실제 송신되기 전 단계에서
+ *     nd_nix_hook_outbound_func 훅 함수를 호출
+ *   - 예: 사용자 공간 애플리케이션에서 발생한 패킷 가로채기 용도
  */
 static struct nf_hook_ops nf_outbound_hook = {
 	.hook = nd_nix_hook_outbound_func,
@@ -1508,8 +1583,14 @@ static struct nf_hook_ops nf_outbound_hook = {
 	.priority = NF_IP_PRI_FIRST,
 };
 
-/*
+
+/**
+ * fops - 디바이스 파일과 연관된 file_operations 구조체
  *
+ * 설명:
+ *   - 이 구조체는 사용자 공간에서 디바이스 파일에 대해 수행하는 open/close/ioctl 등의
+ *     작업을 처리할 콜백 함수들을 정의함
+ *   - 이 구조체는 register_chrdev() 또는 misc_register() 등에 전달되어 디바이스에 연결됨
  */
 static struct file_operations fops = {
 	.owner = THIS_MODULE,
@@ -1518,8 +1599,17 @@ static struct file_operations fops = {
 	.unlocked_ioctl = nd_device_ioctl,
 };
 
-/*
+
+/**
+ * nd_nix_nfm_chardev_init - 문자 디바이스 초기화 함수
  *
+ * 설명:
+ *   - register_chrdev()를 통해 major number를 동적으로 할당받고,
+ *     디바이스 클래스 및 노드를 생성하여 /dev/ 디바이스 파일을 등록한다.
+ *
+ * 반환값:
+ *   - 0: 성공
+ *   - 음수: 에러 코드 반환 (등록 실패, 클래스 생성 실패 등)
  */
 static int nd_nix_nfm_chardev_init(void)
 {
@@ -1561,8 +1651,14 @@ static int nd_nix_nfm_chardev_init(void)
 	return 0;
 }
 
-/*
+/**
+ * nd_nix_nfm_chardev_exit - 문자 디바이스 및 클래스 해제 함수
  *
+ * 설명:
+ *   - device_destroy(): /dev 노드 제거
+ *   - class_destroy(): sysfs에서 클래스 제거
+ *   - unregister_chrdev(): 문자 디바이스 등록 해제
+ *   - 커널 모듈 제거 시 호출되어 리소스를 정리함
  */
 static void nd_nix_nfm_chardev_exit(void)
 {
@@ -1579,8 +1675,19 @@ static void nd_nix_nfm_chardev_exit(void)
 	}
 }
 
-/*
+
+/**
+ * nd_nix_nfm_init - 커널 모듈 초기화 함수 (__init)
  *
+ * 설명:
+ *   - 로그 및 룰 관련 리스트 초기화
+ *   - Netfilter 훅 (inbound, outbound) 등록
+ *   - 문자 디바이스 초기화
+ *   - 커널 모듈이 로드될 때 호출됨
+ *
+ * 반환값:
+ *   0 성공
+ *  -1 실패 (Netfilter 훅 등록 실패 등)
  */
 static int __init nd_nix_nfm_init(void)
 {
@@ -1614,8 +1721,15 @@ static int __init nd_nix_nfm_init(void)
 	return 0;
 }
 
-/*
+
+/**
+ * nd_nix_nfm_exit - 커널 모듈 종료 함수 (__exit)
  *
+ * 설명:
+ *   - 등록된 Netfilter 훅 제거
+ *   - 문자 디바이스 및 클래스 제거
+ *   - 해시 테이블과 로그 리스트 정리
+ *   - 동적 메모리 해제 및 커널 자원 해방
  */
 static void __exit nd_nix_nfm_exit(void)
 {
