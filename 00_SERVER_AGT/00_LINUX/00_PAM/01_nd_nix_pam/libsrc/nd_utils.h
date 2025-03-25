@@ -335,5 +335,16 @@ int check_pam_su_policy(const char *json_file, const char *switch_account, char 
 int check_sam_su_policy(const char *json_file, const char *switch_account, char *agtAuthNo, time_t current_time, int current_wday, int *logging);
 
 void ReadAppConfigFile();
+
+char en85(int i);
+
+int dc85(char i);
+
+char* base85_decode(const char* p_pBuffer, int len, int* out_len);
+
+char* base85_encode(const char* p_pBuffer, int len, int* out_len);
+
+
+
  
 #endif // ND_UTILS_H

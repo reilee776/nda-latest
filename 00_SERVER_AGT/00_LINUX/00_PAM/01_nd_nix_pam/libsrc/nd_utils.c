@@ -3721,3 +3721,177 @@ void ReadAppConfigFile()
     nd_log(NDLOG_INF, "PAM configuration read complete.");
     nd_log(NDLOG_INF, LOG_SEPARATOR);
 }
+
+char en85(int i) {
+    switch (i) {
+        case 0: return 'e'; case 1: return 'f'; case 2: return 'g'; case 3: return 'a'; case 4: return 'c';
+        case 5: return 'd'; case 6: return 'b'; case 7: return 'h'; case 8: return 'i'; case 9: return 'j';
+        case 10: return 'k'; case 11: return 'n'; case 12: return 'o'; case 13: return 'l'; case 14: return 'm';
+        case 15: return 'p'; case 16: return 's'; case 17: return 'q'; case 18: return 'r'; case 19: return 't';
+        case 20: return 'w'; case 21: return 'u'; case 22: return 'v'; case 23: return 'x'; case 24: return '9';
+        case 25: return 'y'; case 26: return 'z'; case 27: return '1'; case 28: return '0'; case 29: return '3';
+        case 30: return '2'; case 31: return '6'; case 32: return '5'; case 33: return '7'; case 34: return '4';
+        case 35: return '8'; case 36: return '{'; case 37: return '}'; case 38: return '~'; case 39: return '!';
+        case 40: return '#'; case 41: return '$'; case 42: return '%'; case 43: return '&'; case 44: return '(';
+        case 45: return ')'; case 46: return '+'; case 47: return ','; case 48: return '-'; case 49: return '.';
+        case 50: return ':'; case 51: return ';'; case 52: return 'J'; case 53: return 'I'; case 54: return 'L';
+        case 55: return 'K'; case 56: return 'M'; case 57: return 'B'; case 58: return 'C'; case 59: return 'W';
+        case 60: return '='; case 61: return 'N'; case 62: return 'O'; case 63: return '@'; case 64: return 'A';
+        case 65: return 'X'; case 66: return 'Y'; case 67: return 'Z'; case 68: return '['; case 69: return ']';
+        case 70: return '^'; case 71: return '_'; case 72: return '`'; case 73: return 'D'; case 74: return 'E';
+        case 75: return 'F'; case 76: return 'P'; case 77: return 'Q'; case 78: return 'G'; case 79: return 'H';
+        case 80: return 'S'; case 81: return 'T'; case 82: return 'R'; case 83: return 'U'; case 84: return 'V';
+    }
+    return ' ';
+}
+
+int dc85(char i) {
+    switch (i) {
+        case 'e': return 0; case 'f': return 1; case 'g': return 2; case 'a': return 3; case 'c': return 4;
+        case 'd': return 5; case 'b': return 6; case 'h': return 7; case 'i': return 8; case 'j': return 9;
+        case 'k': return 10; case 'n': return 11; case 'o': return 12; case 'l': return 13; case 'm': return 14;
+        case 'p': return 15; case 's': return 16; case 'q': return 17; case 'r': return 18; case 't': return 19;
+        case 'w': return 20; case 'u': return 21; case 'v': return 22; case 'x': return 23; case '9': return 24;
+        case 'y': return 25; case 'z': return 26; case '1': return 27; case '0': return 28; case '3': return 29;
+        case '2': return 30; case '6': return 31; case '5': return 32; case '7': return 33; case '4': return 34;
+        case '8': return 35; case '{': return 36; case '}': return 37; case '~': return 38; case '!': return 39;
+        case '#': return 40; case '$': return 41; case '%': return 42; case '&': return 43; case '(': return 44;
+        case ')': return 45; case '+': return 46; case ',': return 47; case '-': return 48; case '.': return 49;
+        case ':': return 50; case ';': return 51; case 'J': return 52; case 'I': return 53; case 'L': return 54;
+        case 'K': return 55; case 'M': return 56; case 'B': return 57; case 'C': return 58; case 'W': return 59;
+        case '=': return 60; case 'N': return 61; case 'O': return 62; case '@': return 63; case 'A': return 64;
+        case 'X': return 65; case 'Y': return 66; case 'Z': return 67; case '[': return 68; case ']': return 69;
+        case '^': return 70; case '_': return 71; case '`': return 72; case 'D': return 73; case 'E': return 74;
+        case 'F': return 75; case 'P': return 76; case 'Q': return 77; case 'G': return 78; case 'H': return 79;
+        case 'S': return 80; case 'T': return 81; case 'R': return 82; case 'U': return 83; case 'V': return 84;
+        default: return -1;
+    }
+}
+
+char* base85_decode(const char* p_pBuffer, int len, int* out_len) {
+    if (p_pBuffer == NULL || len <= 0) {
+        *out_len = 0;
+        return NULL;
+    }
+
+    // 최대 출력 길이 계산 (4바이트당 5문자 -> len / 5 * 4)
+    int max_out_len = (len / 5) * 4 + 4; // 여유분 포함
+    char* sResult = (char*)malloc(max_out_len);
+    if (!sResult) {
+        *out_len = 0;
+        return NULL;
+    }
+
+    int result_pos = 0;
+    unsigned long i = 0;
+    int j = 0;
+
+    for (int idx = 0; idx < len; idx++) {
+        int v = dc85(p_pBuffer[idx]);
+        if (v >= 0) {
+            i = i * 85L + v;
+            j++;
+            if (j >= 5) {
+                sResult[result_pos++] = (char)(i >> 24L);
+                sResult[result_pos++] = (char)(i >> 16L);
+                sResult[result_pos++] = (char)(i >> 8L);
+                sResult[result_pos++] = (char)i;
+                i = 0;
+                j = 0;
+            }
+        }
+    }
+
+    switch (j) {
+        case 4:
+            i = i * 85L + 84L;
+            sResult[result_pos++] = (char)(i >> 24L);
+            sResult[result_pos++] = (char)(i >> 16L);
+            sResult[result_pos++] = (char)(i >> 8L);
+            break;
+        case 3:
+            i = i * 85L + 84L;
+            i = i * 85L + 84L;
+            sResult[result_pos++] = (char)(i >> 24L);
+            sResult[result_pos++] = (char)(i >> 16L);
+            break;
+        case 2:
+            i = i * 85L + 84L;
+            i = i * 85L + 84L;
+            i = i * 85L + 84L;
+            sResult[result_pos++] = (char)(i >> 24L);
+            break;
+    }
+
+    *out_len = result_pos;
+    char* final_result = (char*)realloc(sResult, result_pos + 1);
+    if (final_result) {
+        final_result[result_pos] = '\0'; // Null 종료
+        return final_result;
+    }
+    free(sResult);
+    return NULL;
+}
+
+char* base85_encode(const char* p_pBuffer, int len, int* out_len) {
+    if (p_pBuffer == NULL || len <= 0) {
+        *out_len = 0;
+        return NULL;
+    }
+
+    // 최대 출력 길이 계산 (4바이트당 5문자 -> len / 4 * 5)
+    int max_out_len = (len / 4) * 5 + 5; // 여유분 포함
+    char* sResult = (char*)malloc(max_out_len);
+    if (!sResult) {
+        *out_len = 0;
+        return NULL;
+    }
+
+    int offset = 0;
+    int result_pos = 0;
+    unsigned long i = 0;
+
+    while (len >= 4) {
+        i = ((p_pBuffer[offset] & 0xFFL) << 24L) | ((p_pBuffer[offset + 1] & 0xFFL) << 16L) |
+            ((p_pBuffer[offset + 2] & 0xFFL) << 8L) | (p_pBuffer[offset + 3] & 0xFFL);
+        sResult[result_pos++] = en85((int)((i / 52200625) % 85));
+        sResult[result_pos++] = en85((int)((i / 614125) % 85));
+        sResult[result_pos++] = en85((int)((i / 7225) % 85));
+        sResult[result_pos++] = en85((int)((i / 85) % 85));
+        sResult[result_pos++] = en85((int)(i % 85));
+        offset += 4;
+        len -= 4;
+    }
+
+    switch (len) {
+        case 3:
+            i = ((p_pBuffer[offset] & 0xFFL) << 24L) | ((p_pBuffer[offset + 1] & 0xFFL) << 16L) |
+                ((p_pBuffer[offset + 2] & 0xFFL) << 8L);
+            sResult[result_pos++] = en85((int)((i / 52200625) % 85));
+            sResult[result_pos++] = en85((int)((i / 614125) % 85));
+            sResult[result_pos++] = en85((int)((i / 7225) % 85));
+            sResult[result_pos++] = en85((int)((i / 85) % 85));
+            break;
+        case 2:
+            i = ((p_pBuffer[offset] & 0xFFL) << 24L) | ((p_pBuffer[offset + 1] & 0xFFL) << 16L);
+            sResult[result_pos++] = en85((int)((i / 52200625) % 85));
+            sResult[result_pos++] = en85((int)((i / 614125) % 85));
+            sResult[result_pos++] = en85((int)((i / 7225) % 85));
+            break;
+        case 1:
+            i = ((p_pBuffer[offset] & 0xFFL) << 24L);
+            sResult[result_pos++] = en85((int)((i / 52200625) % 85));
+            sResult[result_pos++] = en85((int)((i / 614125) % 85));
+            break;
+    }
+
+    *out_len = result_pos;
+    char* final_result = (char*)realloc(sResult, result_pos + 1);
+    if (final_result) {
+        final_result[result_pos] = '\0'; // Null 종료
+        return final_result;
+    }
+    free(sResult);
+    return NULL;
+}
+

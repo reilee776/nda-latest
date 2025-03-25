@@ -1132,8 +1132,8 @@ void nd_pam_devlog(int level, char *filename, int line, const char *fmt, ...)
                 close(fd);
         }
 
-        char *log_level = get_value_from_inf(g_sConfFilePath, "AGENT_INFO", "AGENT_LOG_LEVEL");
-        char *log_code_trace = get_value_from_inf(g_sConfFilePath, "AGENT_INFO", PAM_CONF_KEY_AGT_PAM_LOGCODE_TRACE);
+        char *log_level = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, AGT_CNF_VAL_AGENT_LOG_LEVEL);
+        char *log_code_trace = get_value_from_inf(g_sConfFilePath, AGT_CNF_SECT_AGENT_INFO, PAM_CONF_KEY_AGT_PAM_LOGCODE_TRACE);
 
         nSettingLevel = log_level ? atoi(log_level) : 1;
 

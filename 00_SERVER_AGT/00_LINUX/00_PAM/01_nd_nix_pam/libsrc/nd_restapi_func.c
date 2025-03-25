@@ -659,8 +659,31 @@ size_t callback_write_memory(void *ptr, size_t size, size_t nmemb, ApiHttpRes *r
 int getRandomKey_Request(Worker *worker)
 {
         ApiHttpRes httpRes;
+//#ifndef _HI_FORWARD_FOR
+        int encoded_len;
+        char local_ip[INET_ADDRSTRLEN];
+        char s_hi_forward_for_data[64];
+        get_local_ip(local_ip, sizeof(local_ip));
 
-        SendGetDataWithDefaults(&httpRes, GetRdmURL());
+        nd_log (NDLOG_TRC, LOG_SEPARATOR);
+        nd_log (NDLOG_TRC, "Starting the Random Key request operation..");
+        nd_log (NDLOG_TRC, LOG_SEPARATOR);
+        nd_log (NDLOG_TRC, "- local ip address               : %s", local_ip);
+
+        char* encoded = base85_encode(local_ip, strlen(local_ip), &encoded_len);
+
+        nd_log (NDLOG_TRC, "- B85 encoede local ip addr   : %s", encoded);
+    
+        snprintf (s_hi_forward_for_data, sizeof (s_hi_forward_for_data), "%s%s",ND_HI_FORWARD_FOR, encoded );
+
+        nd_log (NDLOG_TRC, "- Apply to the HI-FORWARD-FOR  string: %s", s_hi_forward_for_data);
+
+        nd_log (NDLOG_TRC, LOG_SEPARATOR);
+
+        SendGetDataWithHiForwardFor(&httpRes, GetRdmURL(), s_hi_forward_for_data);
+//#else
+//        SendGetDataWithDefaults(&httpRes, GetRdmURL());
+//#endif //_HI_FORWARD_FOR
 
         if (httpRes.m_data == NULL)
         {
@@ -703,7 +726,7 @@ int getRandomKey_Request(Worker *worker)
 /*
         //
 */
-int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const char *sSignature, const char *authKey, int iHttpsUse)
+int SendGetData(ApiHttpRes *pRes, const char *url, const char *hiforwardfor, const char *sSessID, const char *sSignature, const char *authKey, int iHttpsUse)
 {
         CURL *curl;
         CURLcode res;
@@ -747,6 +770,12 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
                                 slist = curl_slist_append(slist, sTemp);
                         }
 
+                        // HI-FORWARD-FOR ADD
+                        if (hiforwardfor && strlen (hiforwardfor) > 0)
+                        {
+                                slist = curl_slist_append(slist, hiforwardfor);
+                        }
+
                         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
                         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
                         curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
@@ -779,6 +808,12 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
                                 slist = curl_slist_append(slist, sTemp);
                         }
 
+                        // HI-FORWARD-FOR ADD
+                        if (hiforwardfor && strlen (hiforwardfor) > 0)
+                        {
+                                slist = curl_slist_append(slist, hiforwardfor);
+                        }
+
                         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, slist);
                         curl_easy_setopt(curl, CURLOPT_VERBOSE, 1L);
                         curl_easy_setopt(curl, CURLOPT_HEADER, 0);
@@ -789,8 +824,8 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
                 curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, callback_write_memory);
                 curl_easy_setopt(curl, CURLOPT_TIMEOUT, 10L);
                 curl_easy_setopt(curl, CURLOPT_HTTPGET, 1L);
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
-		curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
+		        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, 0L);
+		        curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, 0L);
 
                 res = curl_easy_perform(curl);
                 if (res != CURLE_OK)
@@ -828,7 +863,7 @@ int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const ch
 /*
         //
 */
-bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, const char *sSignature, const char *sSessID, const char *authKey, int iHttpsUse)
+bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, const char *sSignature, const char *sSessID, const char *authKey,  int iHttpsUse)
 {
         bool bResult = true;
         CURL *curl;

@@ -168,10 +168,19 @@ struct st_hiauth_su_access_perm_result	{
 
 // 매크로 정의
 #define SendPostDataWithDefaults(contents, res, url) \
-    SendPostData(contents, res, url, "", "", "", 1)
+    SendPostData(contents, res, url, "","","", 1)
+
+/*
+#define SendPostDataWithHiForwardFor(contents, res, url, hiforwardfor) \
+    SendPostData(contents, res, url, hiforwardfor, "", "", "", 1)
+*/
 
 #define SendGetDataWithDefaults(res, url) \
-    SendGetData(res, url, "", "", "", 1)
+    SendGetData(res, url, "", "", "","", 1)
+
+#define SendGetDataWithHiForwardFor(res, url,hiforwardfor) \
+    SendGetData(res, url, hiforwardfor, "", "", "", 1)
+
 
 /*
         //
@@ -276,12 +285,12 @@ int getRandomKey_Request(Worker * worker);
 /*
         //
 */
-int SendGetData(ApiHttpRes *pRes, const char *url, const char *sSessID, const char *sSignature, const char *authKey, int iHttpsUse);
+int SendGetData(ApiHttpRes *pRes, const char *url, const char *hiforwardfor, const char *sSessID, const char *sSignature, const char *authKey, int iHttpsUse);
 
 /*
         //
 */
-bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, const char *sSignature, const char *sSessID, const char *authKey, int iHttpsUse);
+bool SendPostData(const char *p_sContents, ApiHttpRes *pRes, const char *url, const char *sSignature, const char *sSessID, const char *authKey,  int iHttpsUse);
 
 /*
 	//

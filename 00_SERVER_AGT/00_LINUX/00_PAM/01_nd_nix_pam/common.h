@@ -1,6 +1,9 @@
 #ifndef _COMMON_H__
 #define _COMMON_H__
 #include <netinet/in.h>
+
+#define _HI_FORWARD_FOR     1
+
 #define IPV4_BUFFER_SIZE 	16
 #define NONE_STRING 		"NONE"
 #define MAX_OPMODE_LEN 		4
@@ -297,6 +300,8 @@
 #define ENV_HIWARE_USER_NUMBER	"HIWARE_USER_NUMBER"
 
 #define ND_PAM_VERSION	"0.0.01.001"
+
+#define ND_HI_FORWARD_FOR "HI-FORWARDED-FOR: "
 
 extern char *g_sDataIssueKey;
 extern char *g_sDataRandomKey;

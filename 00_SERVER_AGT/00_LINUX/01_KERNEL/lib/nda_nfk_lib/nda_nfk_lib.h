@@ -22,30 +22,14 @@
 
 #define MAX_BUFFER_SIZE (MAX_LOGS * (LOG_MSG_SIZE +1))
 
+// -----------------------------
+// 🔸 활성 IOCTL 정의
+// -----------------------------
 
 #define IOCTL_ADD_SERVICE_POLICY                _IOWR(ND_IOCTL_MAGIC, 1,        struct cmd_service_rule_pars_data)
-#define IOCTL_ADD_ACTION_POLICY                 _IOWR(ND_IOCTL_MAGIC, 2,        struct cmd_service_sub_rule_pars_data)
-#define IOCTL_ADD_DROPEXCEPT_POLICY             _IOWR(ND_IOCTL_MAGIC, 3,        struct cmd_service_sub_rule_pars_data)
-
 #define IOCTL_MOD_SERVICE_POLICY                _IOWR(ND_IOCTL_MAGIC, 4,        struct cmd_service_rule_pars_data)
-#define IOCTL_MOD_ACTION_POLICY                 _IOWR(ND_IOCTL_MAGIC, 5,        struct cmd_service_sub_rule_pars_data)
-#define IOCTL_MOD_DROPEXCEPT_POLICY             _IOWR(ND_IOCTL_MAGIC, 7,        struct cmd_service_sub_rule_pars_data)
-
 #define IOCTL_DEL_SERVICE_POLICY                _IOWR(ND_IOCTL_MAGIC, 8,        char [MAX_SERVICE_LENGTH])
-#define IOCTL_DEL_ACTION_POLICY                 _IOWR(ND_IOCTL_MAGIC, 9,        struct cmd_service_sub_rule_pars_data)
-#define IOCTL_DEL_DROPEXCEPT_POLICY             _IOWR(ND_IOCTL_MAGIC, 11,       struct cmd_service_sub_rule_pars_data)
-
 #define IOCTL_RESET_POLICY                      _IO(ND_IOCTL_MAGIC,   12)
-
-#define IOCTL_GET_POLICY                        _IOR(ND_IOCTL_MAGIC,  13,        char [MAX_STRING_LENGTH])
-#define IOCTL_GET_SERVICE_POLICY_INDEX          _IOR(ND_IOCTL_MAGIC,  14,        char [MAX_STRING_LENGTH])
-#define IOCTL_GET_ACTION_POLICY_INDEX           _IOWR(ND_IOCTL_MAGIC, 15,       struct cmd_service_sub_rule_pars_data)
-
-#define IOCTL_GET_SERVICE_POLICY                _IOR(ND_IOCTL_MAGIC,  17,        char [MAX_STRING_LENGTH])
-#define IOCTL_GET_ACTION_POLICY                 _IOR(ND_IOCTL_MAGIC,  18,        char [MAX_STRING_LENGTH])
-#define IOCTL_GET_DROPEXCEPT_POLICY             _IOR(ND_IOCTL_MAGIC,  20,        char [MAX_STRING_LENGTH])
-#define IOCTL_GET_CONNECTSESSIONCNT             _IOR(ND_IOCTL_MAGIC,  21,        char [MAX_STRING_LENGTH])
-///
 #define IOCTL_ON_MODE                           _IO(ND_IOCTL_MAGIC,   30)
 #define IOCTL_OFF_MODE                          _IO(ND_IOCTL_MAGIC,   31)
 #define IOCTL_GET_MODE                          _IOR(ND_IOCTL_MAGIC,  32,        char [MAX_STRING_LENGTH])
@@ -61,6 +45,23 @@
 #define IOCTL_DEL_BYPASS_RULE                   _IOW(ND_IOCTL_MAGIC,  51,        struct cmd_bypass_rule_pars_data)
 #define IOCTL_RESET_PYPASS_RULE                 _IO(ND_IOCTL_MAGIC,   52)
 
+// -----------------------------
+// 🔒 (비활성화됨) 나중에 사용할 IOCTL 정의
+// -----------------------------
+
+#define IOCTL_ADD_ACTION_POLICY                 _IOWR(ND_IOCTL_MAGIC, 2,         struct cmd_service_sub_rule_pars_data)
+#define IOCTL_ADD_DROPEXCEPT_POLICY             _IOWR(ND_IOCTL_MAGIC, 3,         struct cmd_service_sub_rule_pars_data)
+#define IOCTL_MOD_ACTION_POLICY                 _IOWR(ND_IOCTL_MAGIC, 5,         struct cmd_service_sub_rule_pars_data)
+#define IOCTL_MOD_DROPEXCEPT_POLICY             _IOWR(ND_IOCTL_MAGIC, 7,         struct cmd_service_sub_rule_pars_data)
+#define IOCTL_DEL_ACTION_POLICY                 _IOWR(ND_IOCTL_MAGIC, 9,         struct cmd_service_sub_rule_pars_data)
+#define IOCTL_DEL_DROPEXCEPT_POLICY             _IOWR(ND_IOCTL_MAGIC, 11,        struct cmd_service_sub_rule_pars_data)
+#define IOCTL_GET_POLICY                        _IOR(ND_IOCTL_MAGIC,  13,        char [MAX_STRING_LENGTH])
+#define IOCTL_GET_SERVICE_POLICY_INDEX          _IOR(ND_IOCTL_MAGIC,  14,        char [MAX_STRING_LENGTH])
+#define IOCTL_GET_ACTION_POLICY_INDEX           _IOWR(ND_IOCTL_MAGIC, 15,        struct cmd_service_sub_rule_pars_data)
+#define IOCTL_GET_SERVICE_POLICY                _IOR(ND_IOCTL_MAGIC,  17,        char [MAX_STRING_LENGTH])
+#define IOCTL_GET_ACTION_POLICY                 _IOR(ND_IOCTL_MAGIC,  18,        char [MAX_STRING_LENGTH])
+#define IOCTL_GET_DROPEXCEPT_POLICY             _IOR(ND_IOCTL_MAGIC,  20,        char [MAX_STRING_LENGTH])
+#define IOCTL_GET_CONNECTSESSIONCNT             _IOR(ND_IOCTL_MAGIC,  21,        char [MAX_STRING_LENGTH])
 
 #define ND_DEVICE_NAME "nd_nix_chardev"
 #define DEVICE_PATH "/dev/nd_nix_chardev"
@@ -302,7 +303,7 @@ int sdk_add_NdaNfkDrv_service_policy(const struct cmd_service_rule_pars_data * s
  * -------------------------------------------------------------------------------------------------------------------------
  */
 
-/*
+/* 
  * SDK for adding action service policies to the driver
  * [add 2024-10-10]
  */
@@ -331,6 +332,10 @@ int sdk_add_NdaNfkDrv_service_policy(const struct cmd_service_rule_pars_data * s
  *
  * @param action 하위 정책 정보를 담은 구조체 포인터
  * @return       0: 성공 / -1: 실패
+ */
+
+/*
+ * -[NOT WORK]
  */
 int sdk_add_NdaNfkDrv_action_policy(const struct cmd_service_sub_rule_pars_data * action);
 
@@ -404,6 +409,10 @@ int sdk_mod_NdaNfkDrv_service_policy_to_index(const struct cmd_service_rule_pars
  *
  * @param action 수정할 액션 정책 데이터 포인터
  * @return       0: 성공 / -1: 실패
+ */
+
+/*
+ * -[NOT WORK]
  */
 int sdk_mod_NdaNfkDrv_action_policy_to_index(const struct cmd_service_sub_rule_pars_data * action);
 
@@ -514,6 +523,10 @@ int sdk_del_NdaNfkDrv_service_policy(const char * service );
  * @param action 삭제할 하위 액션 정책 데이터 포인터 (NULL 불가)
  * @return       0: 성공 / -1: 실패
  */
+
+/*
+ * -[NOT WORK]
+ */
 int sdk_del_NdaNfkDrv_action_policy(const struct cmd_service_sub_rule_pars_data * action );
 
 /*
@@ -587,6 +600,10 @@ int sdk_reset_NdaNfkDrv_policy (void);
  *
  * @return 0: 성공 / -1: 실패
  */
+
+/*
+ * -[NOT WORK]
+ */
 int sdk_get_NdaNfkDrv_service_policy_index(struct cmd_service_rule_pars_data * service);
 
 /*
@@ -627,6 +644,10 @@ int sdk_get_NdaNfkDrv_service_policy_index(struct cmd_service_rule_pars_data * s
  *
  * @return 인덱스 (0 이상) 또는 음수 값 (에러 코드)
  */
+
+/* 
+ * -[NOT WORK]
+ */
 int sdk_get_NdaNfkDrv_action_policy_index(const struct cmd_service_sub_rule_pars_data * action );
 
 /*
@@ -658,6 +679,10 @@ int sdk_get_NdaNfkDrv_action_policy_index(const struct cmd_service_sub_rule_pars
  *             최소 MAX_STRING_LENGTH 크기를 보장해야 함
  *
  * @return 0: 성공 / -1: 실패
+ */
+
+/*
+ * -[NOT WORK]
  */
 int sdk_get_NdaNfkDrv_policy (char * data);
 
@@ -692,6 +717,10 @@ int sdk_get_NdaNfkDrv_policy (char * data);
  *             호출 후 정책 정보 문자열이 이 버퍼에 기록됨
  *
  * @return 0: 성공 / -1: 실패
+ */
+
+/*
+ *  -[NOT WORK]
  */
 int sdk_get_NdaNfkDrv_service_policy (char *data);
 
