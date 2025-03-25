@@ -2696,3 +2696,5 @@ __attribute__((destructor)) void cleanup()
 {
 	pthread_mutex_destroy(&session_id_mutex); // 뮤텍스 정리
 }
+
+__attribute__((used)) static const char pam_version_string[] = "module version: " VERSION;

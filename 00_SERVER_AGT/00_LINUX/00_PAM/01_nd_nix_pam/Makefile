@@ -1,4 +1,4 @@
-#OPENSSL_VERSION := 1
+VERSION := 0.0.1
 OPENSSL_VERSION := $(strip 1)
 
 # Load build configuration
@@ -45,7 +45,8 @@ CFLAGS = -g -fPIC \
          -I$(LIBS_LIB_OPENSSL_DIR)/include \
          -I$(LIBS_LIB_CURL_DIR)/include \
          -I$(LIBS_LIB_ZLIB_DIR)/include \
-         -Wall -Wextra -g -std=c99
+         -Wall -Wextra -g -std=c99 \
+		 -DVERSION=\"$(VERSION)\"
 
 # Target output
 TARGET = nda-pam.so

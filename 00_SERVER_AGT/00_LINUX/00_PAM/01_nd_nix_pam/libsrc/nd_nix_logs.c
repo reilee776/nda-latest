@@ -110,7 +110,6 @@ void nd_pam_archive_log(struct _msg_header_ header, struct _archive_log logitem,
                 retval = sending_data_to_logger(header.sAgentId, header.iMsgType, header.iMsgCode, ND_PAM_VERSION, sDataJsonLog);
                 if (retval == 0)
                 {
-                        nd_log(NDLOG_TRC, "nd_pam_sulog_to_JSON SEND LOGGER..SUCCESS");
                         free(sDataJsonLog);
                         return; // 성공 시 바로 종료
                 }
