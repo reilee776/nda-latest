@@ -344,8 +344,8 @@ void get_user_info(struct pam_user_info *user_info, pam_handle_t *pamh)
 	const char *input_passwd;
 	const char *current_user;
 	const char *switch_user;
-	struct st_hiauth_su_login_result su_login_ret;
-	struct st_hiauth_su_access_perm_result su_access_perm;
+	//struct st_hiauth_su_login_result su_login_ret;
+	//struct st_hiauth_su_access_perm_result su_access_perm;
 	bool bJumpPwd = false;
 	bool bIsSuFailed = false;
 	int retval = 0;
@@ -361,7 +361,9 @@ void get_user_info(struct pam_user_info *user_info, pam_handle_t *pamh)
 	nd_log(NDLOG_INF, "[get pam session user information]");
 	nd_log(NDLOG_INF, "--------------------------------------------------------------------");
 
+    /*
 	char *authsvr_emergency_act = get_value_from_inf(g_sConfFilePath, SECTION_NM_PAM_CONF, PAM_AUTHSVR_EMERGENCY_ACTION); // PAM_AUTHSVR_EMERGENCY_ACTION
+    */
 
 	if (user_info == NULL || pamh == NULL)
 	{
@@ -461,7 +463,6 @@ void get_user_info(struct pam_user_info *user_info, pam_handle_t *pamh)
 	}
 
 	strncpy(user_info->realpwd, input_passwd, sizeof(user_info->realpwd));
-password_next:
 
 	/*
 		//Determining the login type of the current session (distinguishing between console login and terminal login).
