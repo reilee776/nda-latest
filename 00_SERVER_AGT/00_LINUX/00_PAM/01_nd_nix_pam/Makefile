@@ -1,5 +1,12 @@
-VERSION := 0.0.1
 OPENSSL_VERSION := $(strip 1)
+
+ifeq ($(OPENSSL_VERSION),3)
+VERSION := 0.0.1-openssl3.x
+else ifeq($(OPENSSL_VERSION),1)
+VERSION := 0.0.1-openssl1.x
+else
+$(error ❌ OPENSSL_VERSION must be 1 or 3)
+endif
 
 # Load build configuration
 #include ../02_scripts/buildinfo.conf
