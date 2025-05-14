@@ -1,0 +1,39 @@
+# 임시 파일
+*.swp
+*.swo
+
+# 바이너리, DB, 로그
+*.bin
+*.db
+*.sym
+*.tar
+logs/
+*.pb-c.c
+*.pb-c.h
+
+# IDE
+.vscode/
+
+# 백업 및 테스트 디렉토리
+old/
+00_BAK/
+01_nd_nix_pam.1.0/logs/
+01_nd_nix_pam.1.0/log.bin
+01_nd_nix_pam.1.0/nd_nix_pam.db
+# 외부 헤더 및 복사본 무시
+01_nd_nix_pam.1.0/include/
+
+# 백업 및 로컬 설정 무시
+01_nd_nix_pam/Makefile_0328
+nda-pam.1.0/
+.vscode/
+*.sym
+*.org
+*.swp
+../01_KERNEL/nda-fwr/
+../02_SAMPLE/
+../03_PCAP/
+../04_NDA_Linux_lib/
+../05_scapy/
+../06_FILE_Integrity/
+../07_BUILDTEST/
